@@ -1,6 +1,6 @@
 ---
 name: screen-automation-engineer
-version: 1.1.21
+version: 1.1.22
 display_name: 屏幕自动化工程师
 display_name_en: Screen Automation Engineer
 description: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视觉技术提高界面识别与定位效率，并通过自然语言创建和维护自动化流程。配合支持 Windows 与 macOS 的“屏幕自动化小助手”完成流程的安装、升级、修复、卸载、运行和结果读取。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视
 description_en: Enhances an agent with local screen control and visual recognition, and supports creating and maintaining automation workflows with Screen Automation Helper on Windows and macOS.
 metadata:
   slug: screen-automation-engineer
-  version: 1.1.21
+  version: 1.1.22
   displayName: 屏幕自动化工程师
   summary: 增强 Agent 本地屏幕控制能力，通过自然语言创建和维护自动化流程
   homepage: https://www.xiaozs.com/sah/
@@ -149,11 +149,14 @@ Windows 桌面端可在“设置 → Agent 接入…”中启用自动分派、�
 虚线框、VLM 返回了与实际画面一致的摘要、且没有产生点击或输入。DSH 应优先使用已安装命令或现有
 npx 缓存；首次联网临时安装不是稳定运行方式。
 
-选择 DSH 后，小助手会读取 DSH Models 页面保存的非秘密模型元数据。LLM 可“跟随 DSH 默认模型”或
-为小助手任务单独指定；VLM 只应显示明确声明支持 `image` 输入的模型。小助手只保存 Provider ID 与
-Model ID，API Key 仍归 DSH 凭据库管理。没有可选 VLM 时，应指导用户先在 DSH Web 的 Models 页面
-配置真实支持图片输入的模型并刷新，不能把文字模型手工标成 `image` 来绕过能力检查。“检查 VLM”只
-检查声明与选择，不截图、不产生模型调用；真实视觉验收需另行说明截图将发送到哪个 Provider，并取得确认。
+选择 DSH 后，小助手会合并 DSH 已安装官方适配器的非秘密模型目录与 `settings.yaml` 中的自定义模型。
+DSH Web 中使用凭据库启用、但不会写入 `settings.yaml` 的官方模型也应出现在下拉框；不能只检查该文件
+就判断模型不存在。读取只在用户打开 Agent 配置或点击“刷新模型”时发生，空闲 Bridge 不应周期探测 DSH。
+LLM 可“跟随 DSH 默认模型”或为小助手任务单独指定；VLM 只应显示明确声明支持 `image` 输入的模型。
+小助手只保存 Provider ID 与 Model ID，API Key 仍归 DSH 凭据库管理。没有可选 VLM 时，应指导用户先在
+DSH Web 的 Models 页面配置真实支持图片输入的模型并刷新，不能把文字模型手工标成 `image` 来绕过能力
+检查。“检查 VLM”只检查声明与选择，不截图、不产生模型调用；真实视觉验收需另行说明截图将发送到哪个
+Provider，并取得确认。
 
 首次连接、桌面端更新后或诊断异常时，执行一次平台健康检查：
 
