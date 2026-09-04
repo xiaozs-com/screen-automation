@@ -1,6 +1,6 @@
 ---
 name: screen-automation-engineer
-version: 1.1.22
+version: 1.1.23
 display_name: 屏幕自动化工程师
 display_name_en: Screen Automation Engineer
 description: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视觉技术提高界面识别与定位效率，并通过自然语言创建和维护自动化流程。配合支持 Windows 与 macOS 的“屏幕自动化小助手”完成流程的安装、升级、修复、卸载、运行和结果读取。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视
 description_en: Enhances an agent with local screen control and visual recognition, and supports creating and maintaining automation workflows with Screen Automation Helper on Windows and macOS.
 metadata:
   slug: screen-automation-engineer
-  version: 1.1.22
+  version: 1.1.23
   displayName: 屏幕自动化工程师
   summary: 增强 Agent 本地屏幕控制能力，通过自然语言创建和维护自动化流程
   homepage: https://www.xiaozs.com/sah/
@@ -157,6 +157,8 @@ LLM 可“跟随 DSH 默认模型”或为小助手任务单独指定；VLM 只�
 DSH Web 的 Models 页面配置真实支持图片输入的模型并刷新，不能把文字模型手工标成 `image` 来绕过能力
 检查。“检查 VLM”只检查声明与选择，不截图、不产生模型调用；真实视觉验收需另行说明截图将发送到哪个
 Provider，并取得确认。
+执行真实视觉读取时，DSH 屏幕插件必须先用 DSH 模型信息确认所选路由声明支持 `image`，通过后才截图；
+若预检失败，应解释为模型能力不匹配，不得先截取或上传屏幕内容。
 
 首次连接、桌面端更新后或诊断异常时，执行一次平台健康检查：
 
