@@ -1,6 +1,6 @@
 ---
 name: screen-automation-engineer
-version: 1.1.19
+version: 1.1.20
 display_name: 屏幕自动化工程师
 display_name_en: Screen Automation Engineer
 description: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视觉技术提高界面识别与定位效率，并通过自然语言创建和维护自动化流程。配合支持 Windows 与 macOS 的“屏幕自动化小助手”完成流程的安装、升级、修复、卸载、运行和结果读取。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视
 description_en: Enhances an agent with local screen control and visual recognition, and supports creating and maintaining automation workflows with Screen Automation Helper on Windows and macOS.
 metadata:
   slug: screen-automation-engineer
-  version: 1.1.19
+  version: 1.1.20
   displayName: 屏幕自动化工程师
   summary: 增强 Agent 本地屏幕控制能力，通过自然语言创建和维护自动化流程
   homepage: https://www.xiaozs.com/sah/
@@ -125,9 +125,15 @@ APP_CLI="$(bash "<当前 Skill 安装目录>/scripts/workflow_dev.sh" cli-path)"
 授权。只有用户可读流程明确写出 `允许操作：屏幕操作` 时，Bridge 才能请求屏幕操作能力；省略时
 必须保持判断任务，不得让 Provider 自行推断授权。
 
-`dsh-screen-automation` 0.1.6 源码已提供策略版本和精确白名单的执行时校验，但在兼容版本完成
-发布、安装和连接验证前，真实 DSH Provider 仍会拒绝启用整组屏幕插件工具。遇到“任务级工具限制”
-错误时，不能通过改提示词、环境变量或手工打开插件绕过。由某 Provider 启动的流程再次触发同一 Provider checkpoint 时会以
+当 `请求观察` 包含“截图”时，小助手会把当前步骤的目标区域作为只读边界交给 Bridge。DSH Provider
+只开放截图、文字识别和视觉理解工具，禁止点击、输入、滚动及其他改变屏幕的能力；视觉理解会将该区域
+截图登记为 DSH 私有 attachment，并发送给当前配置的 VLM。执行前必须向用户说明所选区域会发送给
+其配置的视觉模型，并避免选择包含密码、验证码、密钥或无关隐私的区域。不能因为没有写
+`允许操作：屏幕操作`，就把这条路径描述为“图片始终只在本机处理”。
+
+`dsh-screen-automation` 必须为 0.1.6 或更高版本，且平台探测到精确白名单的执行时校验后，才可启用
+上述只读工具。遇到“任务级工具限制”错误时，不能通过改提示词、环境变量或手工打开插件绕过；先请
+用户在 DSH 对应 profile 中升级插件，再重新测试连接。由某 Provider 启动的流程再次触发同一 Provider checkpoint 时会以
 `recursive_agent_call` 阻断；不得自动重试形成递归。
 
 小助手反向分派 checkpoint 时，Provider 可能是 WorkBuddy、DSH 或小助手官方智能服务；这与当前
@@ -139,7 +145,9 @@ Agent 主动调用小助手 CLI 是两个方向。必须以平台返回的 Provi
 Windows 桌面端可在“设置 → Agent 接入…”中启用自动分派、选择 Provider、设置超时并测试连接。
 启用后，工作流进入 Agent 步骤会由后台 Bridge 自动领取、分派和回填；不要再指导普通用户手工运行
 `agent-claim` / `agent-complete`。测试连接成功只证明 Provider 可用，仍须运行一个只读 checkpoint
-确认原流程能够恢复。DSH 应优先使用已安装命令或现有 npx 缓存；首次联网临时安装不是稳定运行方式。
+确认原流程能够恢复。若该步骤请求截图，首次验收应选择不含敏感信息的目标区域，并确认出现读取范围
+虚线框、VLM 返回了与实际画面一致的摘要、且没有产生点击或输入。DSH 应优先使用已安装命令或现有
+npx 缓存；首次联网临时安装不是稳定运行方式。
 
 首次连接、桌面端更新后或诊断异常时，执行一次平台健康检查：
 
