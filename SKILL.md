@@ -1,6 +1,6 @@
 ---
 name: screen-automation-engineer
-version: 1.1.25
+version: 1.1.26
 display_name: 屏幕自动化工程师
 display_name_en: Screen Automation Engineer
 description: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视觉技术提高界面识别与定位效率，并通过自然语言创建和维护自动化流程。配合支持 Windows 与 macOS 的“屏幕自动化小助手”完成流程的安装、升级、修复、卸载、运行和结果读取。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视
 description_en: Enhances an agent with local screen control and visual recognition, and supports creating and maintaining automation workflows with Screen Automation Helper on Windows and macOS.
 metadata:
   slug: screen-automation-engineer
-  version: 1.1.25
+  version: 1.1.26
   displayName: 屏幕自动化工程师
   summary: 增强 Agent 本地屏幕控制能力，通过自然语言创建和维护自动化流程
   homepage: https://www.xiaozs.com/sah/
@@ -160,12 +160,10 @@ Provider，并取得确认。
 执行真实视觉读取时，DSH 屏幕插件必须先用 DSH 模型信息确认所选路由声明支持 `image`，通过后才截图；
 若预检失败，应解释为模型能力不匹配，不得先截取或上传屏幕内容。
 
-用户可通过桌面端“工具 → Agent 生成工作流草稿…”输入任务目标并框选授权区域。必须先向用户显示截图
-将发送到的 Provider/Model；Agent 返回的流程语言草稿由小助手保存在 `workflow-drafts` 并本地校验。
-生成成功不等于已安装或可安全运行：应先让用户查看草稿和校验结果，再通过标准安装预览与首次小范围
-验收流程处理，不能跳过审阅直接安装或执行。
-初稿未通过本地校验时，小助手可将原稿和校验错误交给 Agent 做一次纯文本修正；第二次不得重复截图，
-原稿必须保留。即使修正版通过校验，也仍需用户审阅，不能将“语法有效”等同于业务步骤正确。
+桌面端“设置 → Agent 接入”底部的“测试 Agent 屏幕理解…”只用于验证反向调用：先显示截图将发送到的
+Provider/Model，再由用户框选授权区域，最后展示理解摘要。不得把这个单画面测试描述为创建工作流。
+可靠流程仍需用户与 Agent 多轮对话、跨页面观察、试运行、修正和验收。内部草稿生成即使通过语法校验，
+也不能将“语法有效”等同于业务步骤正确，更不能跳过用户审阅直接安装或执行。
 
 首次连接、桌面端更新后或诊断异常时，执行一次平台健康检查：
 
