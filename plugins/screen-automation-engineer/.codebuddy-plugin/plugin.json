@@ -1,0 +1,54 @@
+{
+  "name": "screen-automation-engineer",
+  "version": "1.1.28",
+  "description": "Safely completes local screen tasks and turns repeated work into maintainable automation workflows.",
+  "author": {
+    "name": "xiaozs-com",
+    "email": "qclaw@xiaozs.com"
+  },
+  "agents": ["./agents/screen-automation-engineer.md"],
+  "skills": ["./skills/screen-automation"],
+  "expertType": "agent",
+  "agentName": "screen-automation-engineer",
+  "displayName": {
+    "en": "Screen Automation Engineer",
+    "zh": "屏幕自动化工程师"
+  },
+  "profession": {
+    "en": "Screen Automation Engineer",
+    "zh": "屏幕自动化工程师"
+  },
+  "displayDescription": {
+    "en": "Confirms the target window, completes screen tasks safely, and turns repeated work into verifiable and maintainable automation workflows.",
+    "zh": "确认目标窗口并安全完成屏幕操作，把重复任务沉淀为可验证、可停止、可维护的自动化流程。"
+  },
+  "avatar": "avatars/expert.png",
+  "categoryId": "02-Engineering",
+  "defaultInitPrompt": {
+    "zh": "帮我确认目标窗口，并安全完成这项屏幕任务",
+    "en": "Confirm the target window and safely complete this screen task"
+  },
+  "plugin": "screen-automation-engineer",
+  "homepage": "https://www.xiaozs.com/sah/",
+  "license": "MIT-0",
+  "keywords": ["screen-automation", "workflow", "windows", "macos"],
+  "tags": [
+    {"en": "Screen Automation", "zh": "屏幕自动化"},
+    {"en": "Workflow", "zh": "自动化流程"},
+    {"en": "Desktop", "zh": "本地屏幕"}
+  ],
+  "quickPrompts": [
+    {
+      "zh": "帮我确认目标窗口，并安全完成这项屏幕任务",
+      "en": "Confirm the target window and safely complete this screen task"
+    },
+    {
+      "zh": "把我每天重复的屏幕操作做成自动化流程",
+      "en": "Turn my repeated screen task into an automation workflow"
+    },
+    {
+      "zh": "检查并修复这个屏幕自动化流程",
+      "en": "Inspect and repair this screen automation workflow"
+    }
+  ]
+}

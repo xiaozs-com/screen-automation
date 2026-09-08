@@ -3,10 +3,11 @@ name: Publish Skill to ClawHub
 on:
   pull_request:
     paths:
-      - "SKILL.md"
-      - "agents/**"
-      - "references/**"
-      - "scripts/**"
+      - "skills/screen-automation-engineer/**"
+      - "skills/screen-automation/**"
+      - "plugins/screen-automation-engineer/**"
+      - "tools/assemble_assets.py"
+      - "package_assets.ps1"
       - ".clawhubignore"
       - ".github/workflows/clawhub-publish.yml"
   push:
@@ -25,30 +26,31 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Assemble and validate Agent assets
+        run: python tools/assemble_assets.py --sync --check
+
       - id: skill-version
-        name: Read the SkillHub version
+        name: Read the asset version
         shell: python
         run: |
           import os
+          import json
           import re
           from pathlib import Path
 
-          text = Path("SKILL.md").read_text(encoding="utf-8")
-          match = re.search(r"(?m)^  version:\\s*['\"]?([^'\"\\s#]+)", text)
-          if not match:
-              raise SystemExit("metadata.version is missing from SKILL.md")
-          version = match.group(1)
-          if not re.fullmatch(r"v?\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?", version):
-              raise SystemExit(f"metadata.version is not a SemVer version: {version}")
+          definition = json.loads(Path("skills/screen-automation-engineer/assembly.json").read_text(encoding="utf-8"))
+          version = definition.get("version", "")
+          if not re.fullmatch(r"v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
+              raise SystemExit(f"assembly version is not SemVer: {version}")
           version = version.removeprefix("v")
           git_ref = os.environ.get("GITHUB_REF", "")
           if git_ref.startswith("refs/tags/") and git_ref != f"refs/tags/v{version}":
               raise SystemExit(
                   f"Tag {git_ref.removeprefix('refs/tags/')} does not match "
-                  f"SKILL.md metadata.version {version}"
+                  f"assembly version {version}"
               )
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
-              output.write(f"version={version}\\n")
+              output.write(f"version={version}\n")
 
   dry-run:
     if: github.event_name == 'pull_request'
@@ -58,7 +60,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Preview ClawHub release
-        run: npx --yes clawhub@0.23.3 skill publish . --owner xiaozs-com --version "${{ needs.resolve-version.outputs.version }}" --dry-run
+        run: npx --yes clawhub@0.23.3 skill publish dist/screen-automation-engineer --owner xiaozs-com --slug screen-automation-engineer --version "${{ needs.resolve-version.outputs.version }}" --dry-run
 
   publish:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
@@ -66,6 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
+      - name: Assemble and validate ClawHub asset
+        run: python tools/assemble_assets.py --sync --check
 
       - name: Configure ClawHub authentication
         env:
@@ -79,4 +84,4 @@ jobs:
           npx --yes clawhub@0.23.3 login --token "$CLAWHUB_TOKEN"
 
       - name: Publish matching ClawHub version
-        run: npx --yes clawhub@0.23.3 skill publish . --owner xiaozs-com --version "${{ needs.resolve-version.outputs.version }}"
+        run: npx --yes clawhub@0.23.3 skill publish dist/screen-automation-engineer --owner xiaozs-com --slug screen-automation-engineer --version "${{ needs.resolve-version.outputs.version }}"

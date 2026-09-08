@@ -1,5 +1,2 @@
-# 发布物仅保留 Skill 运行时需要的说明、配置与脚本。
-.github/
-dist/
-tools/
-package_skillhub.ps1
+# ClawHub 工作流只发布 dist/screen-automation-engineer 装配产物。
+# owner 与 slug 固定在装配定义和工作流参数中；仓库根目录永不作为发布源。
