@@ -116,18 +116,38 @@ def validate_workbuddy_atomic(expected_version: str) -> None:
     for relative in canonical_files - {Path("SKILL.md")}:
         if (ATOMIC / relative).read_bytes() != (EMBEDDED_ATOMIC / relative).read_bytes():
             fail(f"embedded WorkBuddy atomic skill has drifted: {relative.as_posix()}")
+    canonical = (ATOMIC / "SKILL.md").read_text(encoding="utf-8")
     embedded = (EMBEDDED_ATOMIC / "SKILL.md").read_text(encoding="utf-8")
     for field in WORKBUDDY_COMPAT_FIELDS:
         if not re.search(rf"(?m)^{re.escape(field)}:\s*.+$", embedded):
             fail(f"WorkBuddy atomic Skill missing {field}")
     if not re.search(rf"(?m)^version:\s*{re.escape(expected_version)}$", embedded):
         fail("WorkBuddy atomic Skill version mismatch")
+    if all(re.search(rf"(?m)^{re.escape(field)}:\s*.+$", canonical) for field in WORKBUDDY_COMPAT_FIELDS):
+        for field in WORKBUDDY_COMPAT_FIELDS:
+            source_value = re.search(rf"(?m)^{re.escape(field)}:\s*(.+)$", canonical)
+            embedded_value = re.search(rf"(?m)^{re.escape(field)}:\s*(.+)$", embedded)
+            if not source_value or not embedded_value or source_value.group(1) != embedded_value.group(1):
+                fail(f"embedded WorkBuddy atomic Skill field differs: {field}")
+        canonical_without_compatibility = re.sub(
+            r"(?m)^(?:version|display_name|display_name_en|description_zh|description_en):.*\n",
+            "",
+            canonical,
+        )
+        embedded_without_compatibility = re.sub(
+            r"(?m)^(?:version|display_name|display_name_en|description_zh|description_en):.*\n",
+            "",
+            embedded,
+        )
+        if embedded_without_compatibility != canonical_without_compatibility:
+            fail("embedded WorkBuddy atomic Skill differs from its canonical source")
+        return
     normalized = re.sub(
         r"(?m)^(?:version|display_name|display_name_en|description_zh|description_en):.*\n",
         "",
         embedded,
     )
-    if normalized != (ATOMIC / "SKILL.md").read_text(encoding="utf-8"):
+    if normalized != canonical:
         fail("WorkBuddy atomic Skill differs from its canonical source")
 
 
@@ -145,7 +165,7 @@ def load_assembly() -> dict[str, object]:
     if unexpected:
         fail(f"hybrid source must contain only assembly.json: {', '.join(unexpected)}")
     data = json.loads(path.read_text(encoding="utf-8"))
-    required = {"schemaVersion", "name", "version", "owner", "slug", "displayName", "description", "agentSource", "skillSource"}
+    required = {"schemaVersion", "name", "version", "owner", "slug", "displayName", "displayNameEn", "description", "descriptionEn", "agentSource", "skillSource"}
     missing = sorted(required - data.keys())
     if missing:
         fail(f"assembly definition missing: {', '.join(missing)}")
@@ -172,7 +192,12 @@ def assemble_hybrid(definition: dict[str, object]) -> None:
         shutil.copytree(skill_dir, GENERATED_HYBRID)
     header = f'''---
 name: {definition["name"]}
+version: {definition["version"]}
+display_name: {definition["displayName"]}
+display_name_en: {definition["displayNameEn"]}
 description: {definition["description"]}
+description_zh: {definition["description"]}
+description_en: {definition["descriptionEn"]}
 metadata:
   owner: {definition["owner"]}
   slug: {definition["slug"]}
