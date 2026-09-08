@@ -1,6 +1,6 @@
 ---
 name: screen-automation-engineer
-description: Enhances an agent's screen understanding and control, uses local screen-vision technology to improve UI recognition and localization efficiency, and creates and maintains automation workflows through natural language. With Screen Automation Helper on Windows and macOS, installs and runs workflows and reads their results.
+description: Provides strong screen understanding and control with local screen-vision technology, and creates and maintains automation workflows through natural language.
 displayName:
   en: "Screen Automation Engineer"
   zh: "屏幕自动化工程师"

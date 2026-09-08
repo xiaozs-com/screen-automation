@@ -1,7 +1,7 @@
 {
   "name": "screen-automation-engineer",
   "version": "1.1.28",
-  "description": "Enhances an agent's screen understanding and control, uses local screen-vision technology to improve UI recognition and localization efficiency, and creates and maintains automation workflows through natural language. With Screen Automation Helper on Windows and macOS, installs and runs workflows and reads their results.",
+  "description": "Provides strong screen understanding and control with local screen-vision technology, and creates and maintains automation workflows through natural language.",
   "author": {
     "name": "xiaozs-com",
     "email": "qclaw@xiaozs.com"
@@ -19,14 +19,14 @@
     "zh": "屏幕自动化工程师"
   },
   "displayDescription": {
-    "en": "Enhances screen understanding and control with local screen-vision technology, then creates and maintains automation workflows through natural language with Screen Automation Helper.",
-    "zh": "增强 Agent 的屏幕理解与控制能力，利用本地屏幕视觉技术提升界面识别和定位效率，并通过自然语言创建和维护自动化流程。"
+    "en": "Provides strong screen understanding and control with local screen-vision technology, and creates and maintains automation workflows through natural language.",
+    "zh": "具备强大的屏幕理解与控制能力，利用本地屏幕视觉技术提升界面识别和定位效率，并通过自然语言创建和维护自动化流程。"
   },
   "avatar": "avatars/expert.png",
   "categoryId": "02-Engineering",
   "defaultInitPrompt": {
-    "zh": "帮我确认目标窗口，并安全完成这项屏幕任务",
-    "en": "Confirm the target window and safely complete this screen task"
+    "zh": "看看左边窗口的内容是什么，进行一项屏幕任务",
+    "en": "See what is in the window on the left and complete a screen task"
   },
   "plugin": "screen-automation-engineer",
   "homepage": "https://www.xiaozs.com/sah/",
@@ -39,8 +39,8 @@
   ],
   "quickPrompts": [
     {
-      "zh": "帮我确认目标窗口，并安全完成这项屏幕任务",
-      "en": "Confirm the target window and safely complete this screen task"
+      "zh": "看看左边窗口的内容是什么，进行一项屏幕任务",
+      "en": "See what is in the window on the left and complete a screen task"
     },
     {
       "zh": "把我每天重复的屏幕操作做成自动化流程",
