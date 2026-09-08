@@ -80,7 +80,8 @@ jobs:
             echo "::error::Missing repository secret CLAWHUB_TOKEN"
             exit 1
           fi
-          echo "CLAWHUB_CONFIG_PATH=$RUNNER_TEMP/clawhub-config.json" >> "$GITHUB_ENV"
+          export CLAWHUB_CONFIG_PATH="$RUNNER_TEMP/clawhub-config.json"
+          echo "CLAWHUB_CONFIG_PATH=$CLAWHUB_CONFIG_PATH" >> "$GITHUB_ENV"
           npx --yes clawhub@0.23.3 login --token "$CLAWHUB_TOKEN"
 
       - name: Publish matching ClawHub version
