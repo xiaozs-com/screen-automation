@@ -1,6 +1,6 @@
 ---
 name: screen-automation-engineer
-version: 1.1.27
+version: 1.1.28
 display_name: 屏幕自动化工程师
 display_name_en: Screen Automation Engineer
 description: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视觉技术提高界面识别与定位效率，并通过自然语言创建和维护自动化流程。配合支持 Windows 与 macOS 的“屏幕自动化小助手”完成流程的安装、升级、修复、卸载、运行和结果读取。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的本地屏幕控制能力，利用本地屏幕视
 description_en: Enhances an agent with local screen control and visual recognition, and supports creating and maintaining automation workflows with Screen Automation Helper on Windows and macOS.
 metadata:
   slug: screen-automation-engineer
-  version: 1.1.27
+  version: 1.1.28
   displayName: 屏幕自动化工程师
   summary: 增强 Agent 本地屏幕控制能力，通过自然语言创建和维护自动化流程
   homepage: https://www.xiaozs.com/sah/
@@ -91,6 +91,20 @@ APP_CLI="$(bash "<当前 Skill 安装目录>/scripts/workflow_dev.sh" cli-path)"
 
 以当前安装版本返回的能力为准。不得依据模型印象、旧对话或 Skill 文档推断某项能力一定存在或不存在。
 
+### Skill 与桌面端版本不强制同步
+
+Skill 可以使用较新的命令和流程标准；已安装的小助手不必与 Skill 使用相同版本号，也不得直接比较
+Skill 的 `1.x` 与桌面端的版本号。每次任务以 `cli status` 输出的已安装版本和 `cli capabilities`
+返回的真实能力为准。
+
+原生命令提示“不支持”、`capabilities` 未列出所需能力，或返回明确的版本/能力缺失时，停止使用该命令，
+不要猜测替代参数或声称功能已经存在。向用户说明“当前安装的小助手没有相关指令，可能需要较新版本”，
+并提示用户查看 `cli status` 输出中的版本号。
+
+如用户要更新，介绍上方对应平台的官方下载地址，由用户自行查看下载页提供的版本信息并决定是否安装。
+未经用户同意，不下载、安装、重启或中断当前任务；不在 Skill 中主动联网查询最新版本。更新完成后，重新
+执行 `cli status` 和 `cli capabilities`，再继续先前任务。
+
 ### 鼠标滚动能力速查
 
 `mouse.scroll` 同时支持纵向和横向滚动。需要滚动时，先在 `capabilities` 返回中确认
@@ -119,52 +133,14 @@ APP_CLI="$(bash "<当前 Skill 安装目录>/scripts/workflow_dev.sh" cli-path)"
 `引擎能力：browser-enhancement@1`。浏览器协议返回成功不等于屏幕状态已经正确；改变页面后仍须
 验证可见结果。Windows 拒绝后台窗口抢前台时，先请用户把受管浏览器置于前台，不得绕过该限制。
 
-### Agent checkpoint 操作授权
+### 可选扩展能力
 
-`执行者：agent` 的步骤中，`请求观察` 只声明可按需读取的观察类型，不是点击、输入或其他操作
-授权。只有用户可读流程明确写出 `允许操作：屏幕操作` 时，Bridge 才能请求屏幕操作能力；省略时
-必须保持判断任务，不得让 Provider 自行推断授权。
+“浏览器增强”“Agent 接入”和 VLM 屏幕理解都是可选扩展。调用前先检查 `cli capabilities` 和小助手
+设置中的组件状态。能力缺失、未授权或需要激活时停止调用；能力码由用户联系开发者购买并自行激活，
+不得猜测、索取、记录、代输或绕过。激活或配置后重新读取能力，并先执行不含敏感信息的只读验证。
 
-当 `请求观察` 包含“截图”时，小助手会把当前步骤的目标区域作为只读边界交给 Bridge。DSH Provider
-只开放截图、文字识别和视觉理解工具，禁止点击、输入、滚动及其他改变屏幕的能力；视觉理解会将该区域
-截图登记为 DSH 私有 attachment，并发送给当前配置的 VLM。执行前必须向用户说明所选区域会发送给
-其配置的视觉模型，并避免选择包含密码、验证码、密钥或无关隐私的区域。不能因为没有写
-`允许操作：屏幕操作`，就把这条路径描述为“图片始终只在本机处理”。
-
-`dsh-screen-automation` 必须为 0.1.6 或更高版本，且平台探测到精确白名单的执行时校验后，才可启用
-上述只读工具。遇到“任务级工具限制”错误时，不能通过改提示词、环境变量或手工打开插件绕过；先请
-用户在 DSH 对应 profile 中升级插件，再重新测试连接。由某 Provider 启动的流程再次触发同一 Provider checkpoint 时会以
-`recursive_agent_call` 阻断；不得自动重试形成递归。
-
-小助手反向分派 checkpoint 时，Provider 可能是 WorkBuddy、DSH 或小助手官方智能服务；这与当前
-Agent 主动调用小助手 CLI 是两个方向。必须以平台返回的 Provider、版本、授权和能力探测结果为准，
-不能因为用户安装了本 Skill 就声称 WorkBuddy 一定支持被小助手调用。外部 Agent 不可调用、未授权
-或离线时，应说明当前原因和仍可使用的本地能力；只有平台明确报告官方智能可用时，才能建议切换，
-不得把专业版权益限制描述成技术故障。
-
-Windows 与 macOS 桌面端都可在“设置 → Agent 接入”中启用自动分派、选择 Provider、设置超时并测试连接。
-启用后，工作流进入 Agent 步骤会由后台 Bridge 自动领取、分派和回填；不要再指导普通用户手工运行
-`agent-claim` / `agent-complete`。测试连接成功只证明 Provider 可用，仍须运行一个只读 checkpoint
-确认原流程能够恢复。若该步骤请求截图，首次验收应选择不含敏感信息的目标区域，并确认出现读取范围
-虚线框、VLM 返回了与实际画面一致的摘要、且没有产生点击或输入。DSH 应优先使用已安装命令或现有
-npx 缓存；首次联网临时安装不是稳定运行方式。
-
-选择 DSH 后，小助手会合并 DSH 已安装官方适配器的非秘密模型目录与 `settings.yaml` 中的自定义模型。
-DSH Web 中使用凭据库启用、但不会写入 `settings.yaml` 的官方模型也应出现在下拉框；不能只检查该文件
-就判断模型不存在。macOS 版只在用户点击“刷新模型”时读取，Windows 版在用户打开 Agent 配置或点击
-“刷新模型”时读取；空闲 Bridge 不应周期探测 DSH，也不应反复弹出命令行窗口。
-LLM 可“跟随 DSH 默认模型”或为小助手任务单独指定；VLM 只应显示明确声明支持 `image` 输入的模型。
-小助手只保存 Provider ID 与 Model ID，API Key 仍归 DSH 凭据库管理。没有可选 VLM 时，应指导用户先在
-DSH Web 的 Models 页面配置真实支持图片输入的模型并刷新，不能把文字模型手工标成 `image` 来绕过能力
-检查。“检查 VLM”只检查声明与选择，不截图、不产生模型调用；真实视觉验收需另行说明截图将发送到哪个
-Provider，并取得确认。
-执行真实视觉读取时，DSH 屏幕插件必须先用 DSH 模型信息确认所选路由声明支持 `image`，通过后才截图；
-若预检失败，应解释为模型能力不匹配，不得先截取或上传屏幕内容。
-
-桌面端“设置 → Agent 接入”底部的“测试 Agent 屏幕理解…”只用于验证反向调用：先显示截图将发送到的
-Provider/Model，再由用户框选授权区域，最后展示理解摘要。不得把这个单画面测试描述为创建工作流。
-可靠流程仍需用户与 Agent 多轮对话、跨页面观察、试运行、修正和验收。内部草稿生成即使通过语法校验，
-也不能将“语法有效”等同于业务步骤正确，更不能跳过用户审阅直接安装或执行。
+任务涉及 `执行者：agent`、Agent Bridge、Provider、DSH、VLM、截图外发或 Agent 接入诊断时，必须先完整
+读取 [Agent 接入与视觉模型标准](references/agent-bridge.md)。普通本地屏幕操作不加载该文档。
 
 首次连接、桌面端更新后或诊断异常时，执行一次平台健康检查：
 

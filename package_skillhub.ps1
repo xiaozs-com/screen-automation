@@ -1,10 +1,23 @@
 param(
-    [string]$Version = "1.1.21",
+    [string]$Version,
     [switch]$ChineseName
 )
 
 $ErrorActionPreference = "Stop"
 $repoRoot = $PSScriptRoot
+$skillPath = Join-Path $repoRoot "SKILL.md"
+$skillContent = Get-Content -LiteralPath $skillPath -Raw
+$declaredVersions = [regex]::Matches($skillContent, '(?m)^\s*version:\s*[''\"]?([^\s''\"]+)') |
+    ForEach-Object { $_.Groups[1].Value }
+if ($declaredVersions.Count -ne 2 -or $declaredVersions[0] -ne $declaredVersions[1]) {
+    throw "SKILL.md 顶层 version 与 metadata.version 必须存在且一致"
+}
+if (-not $Version) {
+    $Version = $declaredVersions[0]
+}
+elseif ($Version -ne $declaredVersions[0]) {
+    throw "打包版本 $Version 与 SKILL.md 声明版本 $($declaredVersions[0]) 不一致"
+}
 $distDir = Join-Path $repoRoot "dist"
 $packageSuffix = if ($ChineseName) { "-skillhub-cn" } else { "" }
 $zipPath = Join-Path $distDir "screen-automation-engineer-$Version$packageSuffix.zip"
