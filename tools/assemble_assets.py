@@ -77,6 +77,60 @@ def safe_replace_tree(source: Path, destination: Path, allowed: tuple[Path, ...]
     shutil.copytree(source, destination)
 
 
+WORKBUDDY_COMPAT_FIELDS = (
+    "version",
+    "display_name",
+    "display_name_en",
+    "description_zh",
+    "description_en",
+)
+
+
+def add_workbuddy_frontmatter(skill_path: Path) -> None:
+    text = skill_path.read_text(encoding="utf-8")
+    version = re.search(r"(?m)^\s{2}version:\s*([^\s#]+)", text)
+    description = re.search(r"(?m)^description:\s*(.+?)\s*$", text)
+    if not version or not description:
+        fail(f"cannot derive WorkBuddy compatibility frontmatter: {skill_path.relative_to(ROOT)}")
+    text = re.sub(
+        r"(?m)^(?:version|display_name|display_name_en|description_zh|description_en):.*\n",
+        "",
+        text,
+    )
+    compatibility = (
+        f"version: {version.group(1)}\n"
+        "display_name: 屏幕自动化\n"
+        "display_name_en: Screen Automation\n"
+        f"description_zh: {description.group(1)}\n"
+        "description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.\n"
+    )
+    text = re.sub(r"(?m)^(name:.*\n)", rf"\1{compatibility}", text, count=1)
+    skill_path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def validate_workbuddy_atomic(expected_version: str) -> None:
+    canonical_files = {path.relative_to(ATOMIC) for path in files_under(ATOMIC)}
+    embedded_files = {path.relative_to(EMBEDDED_ATOMIC) for path in files_under(EMBEDDED_ATOMIC)}
+    if canonical_files != embedded_files:
+        fail("embedded WorkBuddy atomic skill file set has drifted")
+    for relative in canonical_files - {Path("SKILL.md")}:
+        if (ATOMIC / relative).read_bytes() != (EMBEDDED_ATOMIC / relative).read_bytes():
+            fail(f"embedded WorkBuddy atomic skill has drifted: {relative.as_posix()}")
+    embedded = (EMBEDDED_ATOMIC / "SKILL.md").read_text(encoding="utf-8")
+    for field in WORKBUDDY_COMPAT_FIELDS:
+        if not re.search(rf"(?m)^{re.escape(field)}:\s*.+$", embedded):
+            fail(f"WorkBuddy atomic Skill missing {field}")
+    if not re.search(rf"(?m)^version:\s*{re.escape(expected_version)}$", embedded):
+        fail("WorkBuddy atomic Skill version mismatch")
+    normalized = re.sub(
+        r"(?m)^(?:version|display_name|display_name_en|description_zh|description_en):.*\n",
+        "",
+        embedded,
+    )
+    if normalized != (ATOMIC / "SKILL.md").read_text(encoding="utf-8"):
+        fail("WorkBuddy atomic Skill differs from its canonical source")
+
+
 def read_frontmatter_and_body(path: Path) -> tuple[str, str]:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n") or "\n---\n" not in text[4:]:
@@ -195,8 +249,9 @@ def validate_expert(expected_version: str) -> None:
     avatar_path = EXPERT / manifest["avatar"]
     if png_dimensions(avatar_path) != (512, 512) or avatar_path.stat().st_size > 500_000:
         fail("WorkBuddy avatar must be a 512x512 PNG no larger than 500KB")
-    if not EMBEDDED_ATOMIC.is_dir() or tree_digest(ATOMIC) != tree_digest(EMBEDDED_ATOMIC):
-        fail("embedded WorkBuddy atomic skill has drifted; run with --sync")
+    if not EMBEDDED_ATOMIC.is_dir():
+        fail("embedded WorkBuddy atomic skill is missing; run with --sync")
+    validate_workbuddy_atomic(expected_version)
 
 
 def deterministic_zip(source: Path, output: Path) -> str:
@@ -227,6 +282,7 @@ def main() -> int:
         fail("atomic and hybrid skill versions must match for one asset release")
     if args.sync:
         safe_replace_tree(ATOMIC, EMBEDDED_ATOMIC, (EMBEDDED_ATOMIC,))
+        add_workbuddy_frontmatter(EMBEDDED_ATOMIC / "SKILL.md")
     assemble_hybrid(assembly)
     validate_skill(GENERATED_HYBRID, "screen-automation-engineer")
     validate_expert(hybrid_version)
