@@ -1,7 +1,7 @@
 {
   "name": "screen-automation-engineer",
   "version": "1.1.28",
-  "description": "Uses the local Screen Automation platform to safely complete current screen tasks and turn repeated work into maintainable automation workflows.",
+  "description": "Enhances an agent's screen understanding and control with local screen-vision technology, and creates and maintains automation workflows through natural language with Screen Automation Helper on Windows and macOS.",
   "author": {
     "name": "xiaozs-com",
     "email": "qclaw@xiaozs.com"
@@ -19,8 +19,8 @@
     "zh": "屏幕自动化工程师"
   },
   "displayDescription": {
-    "en": "Uses the local Screen Automation platform to confirm the target window, complete current screen tasks safely, and turn repeated work into verifiable and maintainable workflows.",
-    "zh": "基于本地屏幕自动化基础平台确认目标窗口并安全完成当前屏幕任务，把重复任务沉淀为可验证、可停止、可维护的自动化流程。"
+    "en": "Enhances screen understanding and control with local screen-vision technology, then creates and maintains automation workflows through natural language with Screen Automation Helper.",
+    "zh": "增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率，并通过自然语言创建和维护自动化流程。"
   },
   "avatar": "avatars/expert.png",
   "categoryId": "02-Engineering",
