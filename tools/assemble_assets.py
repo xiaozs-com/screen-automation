@@ -180,7 +180,7 @@ metadata:
   displayName: {definition["displayName"]}
   homepage: https://www.xiaozs.com/sah/
 ---'''
-    content = f"{header}\n\n{agent_body}\n\n---\n\n# 原子能力与工程标准\n\n{skill_body}\n"
+    content = f"{header}\n\n{agent_body}\n\n---\n\n# 屏幕自动化能力与工程标准\n\n{skill_body}\n"
     (GENERATED_HYBRID / "SKILL.md").write_text(content, encoding="utf-8", newline="\n")
     openai = '''interface:
   display_name: "屏幕自动化工程师"
