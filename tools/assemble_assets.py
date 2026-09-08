@@ -90,7 +90,8 @@ def add_workbuddy_frontmatter(skill_path: Path) -> None:
     text = skill_path.read_text(encoding="utf-8")
     version = re.search(r"(?m)^\s{2}version:\s*([^\s#]+)", text)
     description = re.search(r"(?m)^description:\s*(.+?)\s*$", text)
-    if not version or not description:
+    description_en = re.search(r"(?m)^description_en:\s*(.+?)\s*$", text)
+    if not version or not description or not description_en:
         fail(f"cannot derive WorkBuddy compatibility frontmatter: {skill_path.relative_to(ROOT)}")
     text = re.sub(
         r"(?m)^(?:version|display_name|display_name_en|description_zh|description_en):.*\n",
@@ -102,7 +103,7 @@ def add_workbuddy_frontmatter(skill_path: Path) -> None:
         "display_name: 屏幕自动化\n"
         "display_name_en: Screen Automation\n"
         f"description_zh: {description.group(1)}\n"
-        "description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.\n"
+        f"description_en: {description_en.group(1)}\n"
     )
     text = re.sub(r"(?m)^(name:.*\n)", rf"\1{compatibility}", text, count=1)
     skill_path.write_text(text, encoding="utf-8", newline="\n")

@@ -1,7 +1,7 @@
 {
   "name": "screen-automation-engineer",
   "version": "1.1.28",
-  "description": "Enhances an agent's screen understanding and control with local screen-vision technology, and creates and maintains automation workflows through natural language with Screen Automation Helper on Windows and macOS.",
+  "description": "Enhances an agent's screen understanding and control, uses local screen-vision technology to improve UI recognition and localization efficiency, and creates and maintains automation workflows through natural language. With Screen Automation Helper on Windows and macOS, installs and runs workflows and reads their results.",
   "author": {
     "name": "xiaozs-com",
     "email": "qclaw@xiaozs.com"
@@ -20,7 +20,7 @@
   },
   "displayDescription": {
     "en": "Enhances screen understanding and control with local screen-vision technology, then creates and maintains automation workflows through natural language with Screen Automation Helper.",
-    "zh": "增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率，并通过自然语言创建和维护自动化流程。"
+    "zh": "增强 Agent 的屏幕理解与控制能力，利用本地屏幕视觉技术提升界面识别和定位效率，并通过自然语言创建和维护自动化流程。"
   },
   "avatar": "avatars/expert.png",
   "categoryId": "02-Engineering",
