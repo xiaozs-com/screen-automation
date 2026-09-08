@@ -1,11 +1,11 @@
 ---
 name: screen-automation
-description: 使用屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口、读取可见内容并执行受控的鼠标键盘操作。适用于一次性屏幕任务；创建或维护可复用流程时使用 screen-automation-engineer。
+description: 基于屏幕自动化小助手这一本地屏幕自动化基础平台，在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务；重复任务由 screen-automation-engineer 沉淀为流程。
 metadata:
   slug: screen-automation
   version: 1.1.28
   displayName: 屏幕自动化
-  summary: 确认目标窗口并安全完成本地屏幕任务
+  summary: 本地屏幕自动化基础平台的当前任务能力
   homepage: https://www.xiaozs.com/sah/
 ---
 

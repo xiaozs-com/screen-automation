@@ -5,7 +5,7 @@
   "owner": "xiaozs-com",
   "slug": "screen-automation-engineer",
   "displayName": "屏幕自动化工程师",
-  "description": "增强 Agent 的本地屏幕控制能力，并通过自然语言创建和维护可验证的自动化流程。",
+  "description": "基于本地屏幕自动化基础平台，安全完成当前屏幕任务，并把重复任务沉淀为可验证、可停止、可维护的自动化流程。",
   "agentSource": "../../plugins/screen-automation-engineer/agents/screen-automation-engineer.md",
   "skillSource": "../screen-automation"
 }

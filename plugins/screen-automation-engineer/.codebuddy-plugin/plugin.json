@@ -1,7 +1,7 @@
 {
   "name": "screen-automation-engineer",
   "version": "1.1.28",
-  "description": "Safely completes local screen tasks and turns repeated work into maintainable automation workflows.",
+  "description": "Uses the local Screen Automation platform to safely complete current screen tasks and turn repeated work into maintainable automation workflows.",
   "author": {
     "name": "xiaozs-com",
     "email": "qclaw@xiaozs.com"
@@ -19,8 +19,8 @@
     "zh": "屏幕自动化工程师"
   },
   "displayDescription": {
-    "en": "Confirms the target window, completes screen tasks safely, and turns repeated work into verifiable and maintainable automation workflows.",
-    "zh": "确认目标窗口并安全完成屏幕操作，把重复任务沉淀为可验证、可停止、可维护的自动化流程。"
+    "en": "Uses the local Screen Automation platform to confirm the target window, complete current screen tasks safely, and turn repeated work into verifiable and maintainable workflows.",
+    "zh": "基于本地屏幕自动化基础平台确认目标窗口并安全完成当前屏幕任务，把重复任务沉淀为可验证、可停止、可维护的自动化流程。"
   },
   "avatar": "avatars/expert.png",
   "categoryId": "02-Engineering",

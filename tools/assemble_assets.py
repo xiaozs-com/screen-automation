@@ -130,7 +130,7 @@ metadata:
     (GENERATED_HYBRID / "SKILL.md").write_text(content, encoding="utf-8", newline="\n")
     openai = '''interface:
   display_name: "屏幕自动化工程师"
-  short_description: "安全完成屏幕任务并创建可维护流程"
+  short_description: "安全完成当前屏幕任务并创建可维护流程"
   default_prompt: "使用 $screen-automation-engineer，确认目标窗口和真实能力，再完成任务或创建经过监督验收的流程。"
 '''
     (GENERATED_HYBRID / "agents" / "openai.yaml").write_text(openai, encoding="utf-8", newline="\n")
