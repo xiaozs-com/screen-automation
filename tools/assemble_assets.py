@@ -18,6 +18,7 @@ EXPERT = ROOT / "plugins" / "screen-automation-engineer"
 EMBEDDED_ATOMIC = EXPERT / "skills" / "screen-automation"
 DIST = ROOT / "dist"
 GENERATED_HYBRID = DIST / "screen-automation-engineer"
+GENERATED_SKILLHUB_CN = DIST / "screen-automation-engineer-skillhub-cn"
 IGNORED_NAMES = {"__pycache__", ".DS_Store", "Thumbs.db"}
 FIXED_ZIP_TIME = (2020, 1, 1, 0, 0, 0)
 
@@ -216,6 +217,35 @@ metadata:
     (GENERATED_HYBRID / "agents" / "openai.yaml").write_text(openai, encoding="utf-8", newline="\n")
 
 
+def assemble_skillhub_cn() -> None:
+    if GENERATED_SKILLHUB_CN.exists():
+        safe_replace_tree(GENERATED_HYBRID, GENERATED_SKILLHUB_CN, (GENERATED_SKILLHUB_CN,))
+    else:
+        GENERATED_SKILLHUB_CN.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(GENERATED_HYBRID, GENERATED_SKILLHUB_CN)
+    skill_path = GENERATED_SKILLHUB_CN / "SKILL.md"
+    text = skill_path.read_text(encoding="utf-8")
+    updated = re.sub(r"(?m)^name:\s*screen-automation-engineer\s*$", "name: 屏幕自动化工程师", text, count=1)
+    if updated == text:
+        fail("cannot derive Chinese SkillHub name")
+    skill_path.write_text(updated, encoding="utf-8", newline="\n")
+
+
+def validate_skillhub_cn() -> None:
+    source_files = {path.relative_to(GENERATED_HYBRID) for path in files_under(GENERATED_HYBRID)}
+    chinese_files = {path.relative_to(GENERATED_SKILLHUB_CN) for path in files_under(GENERATED_SKILLHUB_CN)}
+    if source_files != chinese_files:
+        fail("Chinese SkillHub package file set differs from the ClawHub package")
+    for relative in source_files - {Path("SKILL.md")}:
+        if (GENERATED_HYBRID / relative).read_bytes() != (GENERATED_SKILLHUB_CN / relative).read_bytes():
+            fail(f"Chinese SkillHub package differs outside SKILL.md: {relative.as_posix()}")
+    source = (GENERATED_HYBRID / "SKILL.md").read_text(encoding="utf-8")
+    chinese = (GENERATED_SKILLHUB_CN / "SKILL.md").read_text(encoding="utf-8")
+    normalized = re.sub(r"(?m)^name:\s*屏幕自动化工程师\s*$", "name: screen-automation-engineer", chinese, count=1)
+    if normalized != source:
+        fail("Chinese SkillHub package must differ only by SKILL.md name")
+
+
 def validate_links(skill_dir: Path) -> None:
     link_pattern = re.compile(r"\[[^]]+\]\((?!https?://|#)([^)]+)\)")
     for path in files_under(skill_dir):
@@ -311,6 +341,8 @@ def main() -> int:
         add_workbuddy_frontmatter(EMBEDDED_ATOMIC / "SKILL.md")
     assemble_hybrid(assembly)
     validate_skill(GENERATED_HYBRID, "screen-automation-engineer")
+    assemble_skillhub_cn()
+    validate_skillhub_cn()
     validate_expert(hybrid_version)
 
     result: dict[str, object] = {
@@ -322,6 +354,7 @@ def main() -> int:
         packages = {
             f"screen-automation-{atomic_version}.zip": ATOMIC,
             f"screen-automation-engineer-clawhub-{hybrid_version}.zip": GENERATED_HYBRID,
+            f"screen-automation-engineer-skillhub-cn-{hybrid_version}-.zip": GENERATED_SKILLHUB_CN,
             f"screen-automation-engineer-workbuddy-{hybrid_version}.zip": EXPERT,
         }
         result["packages"] = {
