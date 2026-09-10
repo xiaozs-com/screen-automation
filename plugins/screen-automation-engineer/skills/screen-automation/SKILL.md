@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.1.29
+version: 1.1.30
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_en: Enhances an agent's screen understanding and control with local 
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
 metadata:
   slug: screen-automation
-  version: 1.1.29
+  version: 1.1.30
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -60,8 +60,9 @@ APP_CLI="$(bash "<Skill目录>/scripts/resolve_cli.sh")"
 下载安装：Windows `https://www.xiaozs.com/sah/downloads/windows/latest`；macOS
 `https://www.xiaozs.com/sah/downloads/mac/latest`。未经同意不下载、安装、重启或升级。
 
-Skill 与桌面端版本号相互独立。只以 `cli status` 和 `cli capabilities` 的当前返回为准；能力未列出或
-命令报告不支持时停止该调用，不猜参数、不声称功能已存在。
+Skill 与桌面端版本号相互独立。基础动作以 `cli status` 和 `cli capabilities` 的当前返回为准；可选扩展
+还必须以 `cli access list` 的当前访问状态为准。动作契约未列出、访问状态不是 `effective: true`，或命令
+报告不支持时停止该调用，不猜参数、不声称功能已存在。
 
 ## 低版本桌面端兼容
 
@@ -84,11 +85,16 @@ Skill 与桌面端版本号相互独立。只以 `cli status` 和 `cli capabilit
 ## 完成当前任务
 
 1. 用 `cli window list-visible` 或 `cli window wait-selection` 确认目标窗口；有多个候选时让用户选择。
-2. 用 `cli task begin` 绑定目标，再用 `cli task observe` 获取当前可见状态。
-3. 优先依据当前观察结果定位。坐标只能来自本次有效观察或明确的相对规则，不能沿用旧截图坐标。
-4. 每次改变屏幕前确认动作仍在用户授权范围内；关键或不可逆动作在执行前单独确认。
-5. 点击、输入、滚动或拖动后重新观察并验证可见结果。命令成功只证明事件已发送。
-6. 完成、失败或用户停止时执行 `cli task end`，报告结果、未完成项和保存位置。
+2. 用 `cli task begin` 绑定目标；绑定后先检查目标进程是否为当前支持的浏览器，再用 `cli task observe` 获取当前可见状态。
+3. 若 Windows 目标为 Chrome/Edge，或 macOS 目标为 Chrome，且浏览器增强动作契约与访问状态均有效，先向用户推荐浏览器增强。用户说“这篇文章”或“当前页面”但未给 URL 时，必须在提示关闭前从已确认浏览器地址栏取得当前 `http/https` URL：临时保存原剪贴板，地址栏全选复制，校验 URL，退出地址栏并立即恢复原剪贴板；URL 只保留在当前任务内，不写日志或结果。无法取得合法 URL 时先请用户提供链接，不能让用户关闭后再丢失页面。当前受管会话不能附着已有标签页，使用下方简短提示，不展开技术解释：
+   `检测到这是 <浏览器名称>。使用“浏览器增强”操作会更准确。请先关闭当前浏览器；关闭后告诉我“已关闭”，我会重新打开并继续。`
+4. 不自行关闭用户浏览器。只有用户确认已关闭后才打开受管会话；用户拒绝时继续已授权的普通屏幕操作。能力无效时不要求用户关闭浏览器。
+5. 用户要求选择或复制网页正文、列表、链接、表格或跨滚动区域内容时，优先触发上述浏览器增强提示。先检查当前 `cli capabilities` 是否真实列出 `ctx.browser.select_text` / `ctx.browser.copy`：已列出时按流程标准调用；未列出时可用当前 `ctx.browser.read` 加写入剪贴板权限完成“提取并复制”，但不得声称形成了页面可见选区。不要用 `Ctrl+A` 或盲目拖拽冒充。
+   “帮我复制一下这篇文章的正文部分”等自然语言直接视为这一意图，不要求用户提供 selector、解释 DOM 或改写成命令。
+6. 优先依据当前观察结果定位。坐标只能来自本次有效观察或明确的相对规则，不能沿用旧截图坐标。
+7. 每次改变屏幕前确认动作仍在用户授权范围内；关键或不可逆动作在执行前单独确认。
+8. 点击、输入、滚动或拖动后重新观察并验证可见结果。命令成功只证明事件已发送。
+9. 完成、失败或用户停止时执行 `cli task end`，报告结果、未完成项和保存位置。
 
 常用原生命令形态：
 
@@ -112,6 +118,19 @@ cli task end
 浏览器增强、Agent 接入和 VLM 屏幕理解均可能需要单独组件或能力码。能力缺失、未授权或需要激活时停止，
 由用户联系开发者购买并自行激活；不得猜测、索取、记录、代输或绕过能力码。浏览器增强不接管用户日常
 Profile，也不是独立执行者。
+
+浏览器增强启动的是正常浏览器窗口，必须保留地址栏，供用户确认当前网址、登录状态和页面范围；只有“帮助中心”信息窗口可以使用无地址栏的应用窗口。若浏览器增强窗口没有地址栏，停止操作并报告启动配置异常。
+
+浏览器增强开始前必须同时满足两项：`cli capabilities` 列出 `workflow.browser-enhancement@1`，且
+`cli access list` 中 `browser_enhancement.status.effective` 为 `true`。前者证明当前桌面版本公开了
+`ctx.browser` 动作契约，后者同时核对授权、组件安装、平台可用性和启用状态。只满足其中一项不能运行。
+若旧版 `cli capabilities` 未列出该动作，即使设置页显示已购买或已安装也停止，并说明需要用户自行决定
+是否升级桌面端；若动作已列出但访问状态无效，按返回的 `reason` 和 `action` 区分未授权、未安装、不可用
+或未启用，不把这些状态统称为“缺少能力码”。
+
+开发、修改或验收浏览器增强流程时，还必须完整读取
+[浏览器增强测试标准](references/browser-enhancement-testing.md)，按任务涉及的层级记录实际执行、跳过项和
+证据；静态校验、隔离 Sidecar、正式在线组件和真实业务页面是不同验收层，不能互相代替。
 
 任务涉及 `执行者：agent`、Agent Bridge、Provider、DSH、VLM、截图外发或 Agent 接入诊断时，必须先
 完整读取 [Agent 接入与视觉模型标准](references/agent-bridge.md)。创建、修改或修复流程前，必须完整
