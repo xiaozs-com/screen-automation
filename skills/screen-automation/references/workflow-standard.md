@@ -155,6 +155,8 @@ my-workflow/
 浏览器下载变量【对象变量】文件名【文件名】
 浏览器滚动【x,y】
 浏览器按键【Escape】
+浏览器选择变量【对象变量】内容
+浏览器复制变量【对象变量】字段【text、value、href】
 ```
 
 时长与滚动也可写裸值：`长按 点【名称】，持续 1.2s`、`从 点【起点】 拖到 点【名称】，持续 0.5s`、
@@ -190,9 +192,10 @@ my-workflow/
 复制 `text` 字段。用户不需要提供 CSS selector。正文无法唯一识别时显示候选范围让用户确认，不能猜测。
 
 程序扩展需要浏览器原子能力时，只能调用当前 SDK 的 `ctx.browser`：`open`、`navigate`、`locate`、
-`find`、`read`、`click`、`fill`、`scroll`、`press`、`download`、`verify` 和 `close`。调用方法必须与
-声明权限一致；所有改变页面的调用仍放入 `ctx.step.perform()` 或受监督的 `ctx.debug.step()`，
-并在 `finally` 或流程清理阶段关闭本流程打开的会话。不得直接导入 Playwright、浏览器驱动或网络库。
+`find`、`read`、`click`、`fill`、`scroll`、`press`、`download`、`verify` 和 `close`；仅在当前
+`cli capabilities` 明确列出时，才可额外调用 `select_text`、`copy` 等新增动作。调用方法必须与声明权限一致；
+所有改变页面的调用仍放入 `ctx.step.perform()` 或受监督的 `ctx.debug.step()`，并在 `finally` 或流程清理阶段
+关闭本流程打开的会话。不得直接导入 Playwright、浏览器驱动或网络库。
 
 创建包含 `browser-enhancement@1` 的流程前，先确认当前 `cli capabilities` 列出
 `workflow.browser-enhancement@1`，再确认 `cli access list` 中 `browser_enhancement.status.effective`
