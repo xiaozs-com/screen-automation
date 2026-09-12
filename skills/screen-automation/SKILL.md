@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.1.30
+version: 1.1.31
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕
 description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.
 metadata:
   slug: screen-automation
-  version: 1.1.30
+  version: 1.1.31
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -86,9 +86,8 @@ Skill 与桌面端版本号相互独立。基础动作以 `cli status` 和 `cli 
 
 1. 用 `cli window list-visible` 或 `cli window wait-selection` 确认目标窗口；有多个候选时让用户选择。
 2. 用 `cli task begin` 绑定目标；绑定后先检查目标进程是否为当前支持的浏览器，再用 `cli task observe` 获取当前可见状态。
-3. 若 Windows 目标为 Chrome/Edge，或 macOS 目标为 Chrome，且浏览器增强动作契约与访问状态均有效，先向用户推荐浏览器增强。用户说“这篇文章”或“当前页面”但未给 URL 时，先取得用户同意，再从已确认浏览器地址栏临时读取当前 `http/https` URL：保存原剪贴板，地址栏全选复制，校验 URL，退出地址栏并立即恢复原剪贴板；URL 只保留在当前任务内，不写日志或结果。用户不同意读取地址栏、无法取得合法 URL 或无法恢复剪贴板时，先请用户提供链接，不能让用户关闭后再丢失页面。当前受管会话不能附着已有标签页，使用下方简短提示，不展开技术解释：
-   `检测到这是 <浏览器名称>。使用“浏览器增强”操作会更准确。请先关闭当前浏览器；关闭后告诉我“已关闭”，我会重新打开并继续。`
-4. 不自行关闭用户浏览器。只有用户确认已关闭后才打开受管会话；用户拒绝时继续已授权的普通屏幕操作。能力无效时不要求用户关闭浏览器。
+3. 若 Windows 目标为 Chrome/Edge，或 macOS 目标为 Chrome，且浏览器增强动作契约与访问状态均有效，先向用户推荐浏览器增强。优先继续使用当前窗口或已由小助手管理的浏览器会话；普通屏幕能力足以完成任务时，不得仅为使用 DOM 而要求用户切换窗口。只有任务确实需要完整页面结构化读取、选择或复制，且当前窗口无法安全接管时，才进入重开流程。
+4. 用户说“这篇文章”或“当前页面”但未给 URL，且当前窗口无法接管时，先取得用户同意，再从已确认浏览器地址栏临时读取当前 `http/https` URL：保存原剪贴板，地址栏全选复制，校验 URL，退出地址栏并立即恢复原剪贴板；URL 只保留在当前任务内，不写日志或结果。无法取得合法 URL 时先请用户提供链接，不能让用户关闭后再丢失页面。确需关闭重开时只给简短提示：`当前浏览器暂时无法直接接管。请先关闭浏览器；关闭后告诉我“已关闭”，我会重新打开当前页面并继续。` 不自行关闭用户浏览器；用户拒绝时继续已授权的普通屏幕操作。
 5. 用户要求选择或复制网页正文、列表、链接、表格或跨滚动区域内容时，优先触发上述浏览器增强提示。先检查当前 `cli capabilities` 是否真实列出 `ctx.browser.select_text` / `ctx.browser.copy`：已列出时按流程标准调用；未列出时仅在用户明确要求复制、且流程已声明读取浏览器与写入剪贴板权限时，才可用当前 `ctx.browser.read` 将唯一对象的明确字段写入剪贴板，但不得声称形成了页面可见选区。不要用 `Ctrl+A` 或盲目拖拽冒充。
    “帮我复制一下这篇文章的正文部分”等自然语言直接视为这一意图，不要求用户提供 selector、解释 DOM 或改写成命令。
 6. 优先依据当前观察结果定位。坐标只能来自本次有效观察或明确的相对规则，不能沿用旧截图坐标。
@@ -109,6 +108,22 @@ cli task scroll --point <x,y> --amount <数值> --direction up|down|left|right
 cli task hotkey <按键...>
 cli task end
 ```
+
+浏览器增强提供独立的顶层 CLI，适合 Agent 完成一次性网页任务；命令和参数必须以当前
+`browser --help` 与能力返回为准：
+
+```text
+browser status
+browser open [--browser chrome|edge] [--url <http/https URL>]
+browser navigate --session <会话> --url <http/https URL>
+browser locate --session <会话> --query-json <对象查询> [--index <序号>]
+browser read|click|fill|select-text|copy|scroll|press|verify|download ...
+browser close [--session <会话>]
+```
+
+无 `--index` 时定位结果必须唯一；显式 `--index` 才能从多个候选中选择。`verify` 接受动作与期望 JSON。
+浏览器组件低于 `0.1.3` 且返回 `browser_component_update_required` 时停止，请用户在“设置 → 组件”自行更新，
+不得绕过版本检查或直接启动 Sidecar。
 
 具体参数仍以 `cli capabilities` 为准。横向滚动必须使用 `--direction left|right`，不得以
 `Shift+滚轮` 假冒。事件发送后若画面未变化，按 `no_change` 处理。
@@ -136,6 +151,10 @@ Profile，也不是独立执行者。
 完整读取 [Agent 接入与视觉模型标准](references/agent-bridge.md)。创建、修改或修复流程前，必须完整
 读取 [流程开发标准](references/workflow-standard.md)，并使用本目录 `scripts/workflow_dev.ps1` 或
 `scripts/workflow_dev.sh` 定位 CLI 和执行标准中明确列出的兼容桥接动作。不得凭示例或旧对话补写规则。
+
+只读诊断 Agent Bridge 时优先使用 `agent status`；需要实际探测当前已配置 Provider 时使用
+`agent probe`。这两个命令不配置、不启用 Provider，也不接收 Token。`runs pending-agent`、
+`runs agent-context/claim/complete/fail` 属于外部 Agent 主动领取 checkpoint 的另一条路径，不能混用。
 
 流程工程坚持“确认窗口—只读识别—页面判断—模拟运行—监督操作—失败恢复—小批量”的逐级验收；
 流程语言 v2 中的变量、条件、有界循环、有界重试、验证和人工确认优先于原子动作堆叠。每个改变页面

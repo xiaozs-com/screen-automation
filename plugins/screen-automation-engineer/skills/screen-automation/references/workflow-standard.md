@@ -171,6 +171,11 @@ my-workflow/
 `引擎能力：browser-enhancement@1`。Windows 可写 Chrome 或 Edge；macOS 当前只可写 Chrome。
 每个流程打开独立受管会话，并在结束或失败清理时关闭；不得把用户日常浏览器 Profile 当作操作对象。
 
+一次性当前页面任务可使用桌面端顶层 `browser` CLI；可复用流程仍使用 `ctx.browser`。两者共享访问状态、
+受管 Profile、唯一定位、会话对象和验证边界。顶层 CLI 应优先复用存活的受管会话；用户普通浏览器窗口无法
+安全附着时，不得伪装为已接管。只有任务确需 DOM 且屏幕路径不足时，才提示用户关闭后由小助手重新打开。
+组件低于 `0.1.3` 并返回 `browser_component_update_required` 时停止并提示用户从组件设置更新。
+
 典型顺序是：打开会话 → 导航 → 定位并保存对象变量 → 读取或操作对象 → 验证可见结果 → 关闭会话。
 定位要求唯一目标；零个或多个匹配都必须停止或进入有界恢复。下载只能保存到本次运行的受管下载
 目录，流程不能指定任意系统目录。浏览器对象只在创建它的当前会话有效，不得跨会话复用。
@@ -242,6 +247,8 @@ Provider 能力必须在运行时探测。WorkBuddy 中安装本 Skill，只证�
 
 Windows 与 macOS 用户都通过“设置 → Agent 接入”管理自动分派。连接测试后至少运行一次只读 Agent 步骤，
 确认 checkpoint 经 Provider 返回严格结果并恢复流程；不得把 Provider 版本探测成功当作纵向闭环。
+CLI 的 `agent status` 只显示非秘密配置摘要，`agent probe` 只探测已配置 Provider；二者不得修改设置或接收
+凭据，也不能替代 checkpoint 闭环验收。
 
 ### 填写表单与运行期锚定
 
