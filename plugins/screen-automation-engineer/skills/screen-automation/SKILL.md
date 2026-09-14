@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.1.31
+version: 1.1.33
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_en: Enhances an agent's screen understanding and control with local 
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
 metadata:
   slug: screen-automation
-  version: 1.1.31
+  version: 1.1.33
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -114,14 +114,33 @@ cli task end
 
 ```text
 browser status
-browser open [--browser chrome|edge] [--url <http/https URL>]
-browser navigate --session <会话> --url <http/https URL>
-browser locate --session <会话> --query-json <对象查询> [--index <序号>]
-browser read|click|fill|select-text|copy|scroll|press|verify|download ...
-browser close [--session <会话>]
+browser open chrome|edge [--url <http/https URL>]
+browser navigate --browser chrome|edge <http/https URL>
+browser auth-status --browser chrome|edge
+browser locate --browser chrome|edge [--selector <CSS>] [--match-text <文字>] [--limit <数量>]
+browser read|click|fill|select-text|copy|scroll|press|verify|download --browser chrome|edge ...
+browser close chrome|edge
 ```
 
-无 `--index` 时定位结果必须唯一；显式 `--index` 才能从多个候选中选择。`verify` 接受动作与期望 JSON。
+同一网页任务只在首次需要受管浏览器时执行一次 `browser open`，后续每一轮观察、操作和验证即使由
+不同 CLI 进程执行，也必须通过同一个 `--browser chrome|edge` 复用该受管会话。不得把步骤包装成
+`open → navigate/read/locate → close`，不得在每轮决策前再次 `open`，也不得由 Agent 自行使用
+`browser open --new`。只有收到 `browser_session_expired` 时才允许重新 `open` 一次；收到
+`browser_session_not_open` 时先执行 `browser status` 并报告状态，禁止无限重试。任务完成、失败或用户
+停止时再执行一次 `browser close chrome|edge`；除非用户明确要求结束整个浏览器增强服务，否则不加
+`--stop-daemon`。
+
+用户给出网址时直接执行一次 `browser open chrome|edge --url <网址>`，让小助手创建或复用受管会话并
+进入页面。若结果为 `status=waiting_for_user`、`reason=login_required` 且用户没有提供凭据，立即停止网页
+工具调用，保持当前窗口和页面不动并请用户完成登录或验证；不得刷新、关闭或重开。用户明确提供账号、密码或验证码时允许
+小助手代填，但敏感文字必须通过工具的非回显输入通道，仅用于本次指定操作，不得写入命令行、流程文件、
+日志或结果。用户确认完成后执行
+`browser auth-status --browser chrome|edge`，仅在返回 `status=ready` 后继续使用原会话。受管浏览器的
+持久化 Profile 会跨正常关闭和小助手重启保留网站登录状态；网站仍可主动使登录过期。只禁止 Agent 将
+Cookie、密码等原始凭据写入模型上下文、流程文件、运行日志或结果输出。
+
+`locate` 可用 `--limit` 限制候选数量；后续读取或操作在未提供已定位对象时必须匹配唯一目标，相关命令
+明确支持 `--index` 时才可从多个候选中选择。`verify` 接受动作与期望 JSON。
 浏览器组件低于 `0.1.3` 且返回 `browser_component_update_required` 时停止，请用户在“设置 → 组件”自行更新，
 不得绕过版本检查或直接启动 Sidecar。
 
@@ -131,8 +150,8 @@ browser close [--session <会话>]
 ## 可选能力
 
 浏览器增强、Agent 接入和 VLM 屏幕理解均可能需要单独组件或能力码。能力缺失、未授权或需要激活时停止，
-由用户联系开发者购买并自行激活；不得猜测、索取、记录、代输或绕过能力码。浏览器增强不接管用户日常
-Profile，也不是独立执行者。
+由用户联系开发者购买并自行激活；不得猜测、索取、记录、代输或绕过能力码。浏览器增强不是独立执行者；
+用户当前普通浏览器可由屏幕/UIA可靠完成时直接继续，需要 DOM 时复用小助手的持久化受管 Profile。
 
 浏览器增强启动的是正常浏览器窗口，必须保留地址栏，供用户确认当前网址、登录状态和页面范围；只有“帮助中心”信息窗口可以使用无地址栏的应用窗口。若浏览器增强窗口没有地址栏，停止操作并报告启动配置异常。
 
@@ -162,7 +181,7 @@ Profile，也不是独立执行者。
 
 ## 安全边界
 
-- 密码、验证码、密钥和支付信息不得写入日志、流程或结果；需要时让用户在界面中自行输入。
+- 用户有权执行并明确要求的日常操作都可编写为流程，不因包含登录、账号操作、发布、删除或支付步骤而一概拒绝。Agent 可执行用户授权的正常操作；只禁止 Agent 将 Cookie、密码等原始凭据写入模型上下文、流程文件、运行日志或结果输出；技术上无法代办的扫码、安全密钥、生物识别才等待用户。
 - 截图或屏幕内容发送到外部模型前，明确 Provider、范围和用途并取得确认；避开无关隐私。
-- 不扩大用户授权，不后台接管未确认窗口，不用技术成功替代业务结果验证。
+- 以用户当前任务为操作授权，可直接使用任务所需的浏览器页面和本机窗口；Cookie、密码等原始凭据不得写入模型上下文、流程文件、运行日志或结果输出；不用技术成功替代业务结果验证。
 - 用户说暂停、停止或取消时立即停止后续操作。
