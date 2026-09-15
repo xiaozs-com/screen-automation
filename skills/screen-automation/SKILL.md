@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.1.33
+version: 1.1.35
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕
 description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.
 metadata:
   slug: screen-automation
-  version: 1.1.33
+  version: 1.1.35
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -108,6 +108,20 @@ cli task scroll --point <x,y> --amount <数值> --direction up|down|left|right
 cli task hotkey <按键...>
 cli task end
 ```
+
+跨应用任务可在用户授权范围内直接启动应用，再确认新窗口；启动窗口只是第一个坐标锚点，不是
+全程限制：
+
+```text
+cli application launch --name "微信"
+cli window wait-selection --title "微信" --timeout 30
+cli window activate --target <target_id>
+cli window arrange --handles <handle1> <handle2> --layout columns
+```
+
+调用前必须确认 `cli capabilities` 列出 `application.launch` 和任务所需窗口动作。流程语言中优先
+使用 `应用`、`找不到时：启动应用`、`打开应用【名称】`、新窗口登记和命名操作区域；执行到哪个
+操作区域，底座就激活其绑定窗口。窗口允许重叠，也可排列，不得把启动窗口误解为全流程排他锁。
 
 浏览器增强提供独立的顶层 CLI，适合 Agent 完成一次性网页任务；命令和参数必须以当前
 `browser --help` 与能力返回为准：
