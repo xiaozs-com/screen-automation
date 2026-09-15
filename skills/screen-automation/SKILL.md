@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.1.35
+version: 1.1.42
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕
 description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.
 metadata:
   slug: screen-automation
-  version: 1.1.35
+  version: 1.1.42
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -122,6 +122,18 @@ cli window arrange --handles <handle1> <handle2> --layout columns
 调用前必须确认 `cli capabilities` 列出 `application.launch` 和任务所需窗口动作。流程语言中优先
 使用 `应用`、`找不到时：启动应用`、`打开应用【名称】`、新窗口登记和命名操作区域；执行到哪个
 操作区域，底座就激活其绑定窗口。窗口允许重叠，也可排列，不得把启动窗口误解为全流程排他锁。
+`应用` 直接写为 Windows `.exe` 文件名且没有另写 `首选进程` 时，该文件名是严格进程条件；不得用
+标题相同的其他应用窗口代替。纯浏览器增强步骤可以省略 `在`，因为它操作受管会话对象；普通
+Chrome/Edge 窗口即使标题相同，也不能被当作已经打开的受管浏览器会话。
+流程主动打开并登记的新应用窗口默认继承启动窗口的位置和大小；受管浏览器窗口创建后也由底座
+强制应用该区域。只有流程显式排列窗口或指定其他布局时，才覆盖这个默认摆放。
+`打开浏览器会话` 步骤中的浏览器元素观察由底座延后到会话创建后作为就绪检查；不得在会话尚未
+创建时先调用 `browser locate`。纯浏览器观察/验证步骤同样不要求桌面操作区域。
+网页可见文字条件使用 `浏览器出现文字【文字】`，不要把普通文字写进 `浏览器出现元素【CSS selector】`。
+登录或验证需要用户操作时使用 `失败：等待用户继续`；底座暂停并显示等待状态，用户点击主界面现有
+“继续”按钮后立即复检，未满足则再次等待。
+需要自动检测时使用 `失败：等待用户继续；10秒重试`；底座每 10 秒自动复检，用户点击“继续”可
+提前唤醒。所有普通页面文字条件都必须使用文字语法，不能写进元素 selector。
 
 浏览器增强提供独立的顶层 CLI，适合 Agent 完成一次性网页任务；命令和参数必须以当前
 `browser --help` 与能力返回为准：

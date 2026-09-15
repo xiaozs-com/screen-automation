@@ -94,10 +94,21 @@ my-workflow/
   缩放或排列后坐标跟随更新。执行每个步骤前，底座自动激活该步骤 `在` 指定的窗口，窗口即使
   重叠也能切换操作。新窗口使用：
   `新窗口：等待新出现的窗口，标题包含【文字】，登记为操作区域【名称】`。
-- 启动时按标题、首选进程筛选：唯一候选自动确认；多个候选显示多个虚线框让用户选择；没有候选且声明 `应用`、`找不到时：启动应用` 时直接启动并等待。不得猜测同名窗口。
+- `标题包含` 和 `首选进程` 都可省略。唯一候选自动确认；没有筛选条件或多个候选时由底座显示
+  虚线框让用户选择，流程不写确认机制；没有候选且声明 `应用`、`找不到时：启动应用` 时直接启动
+  并等待。`应用` 是 Windows `.exe` 文件名且未另写 `首选进程` 时，该文件名是严格进程条件，
+  不得退回到只有标题相同的其他应用窗口。
 - 跨应用动作：`打开应用【应用名或可执行文件】`；打开后用 `新窗口` 登记为命名操作区域。
 - 窗口命令：`切换到操作区域【名称】`；`排列窗口【区域一、区域二】为【并排】`。排列还支持
   `上下排列`、`网格`、`二乘二`，目标必须是二至四个已登记操作区域。
+- 纯浏览器增强步骤可以省略 `在`。它们操作受管浏览器会话对象，不得把标题相同的普通
+  Chrome/Edge 窗口当作受管会话。流程主动打开并登记的新应用窗口默认继承启动窗口的位置和
+  大小；受管浏览器被发现后也强制应用该区域。显式排列窗口或指定其他布局时，以流程声明为准。
+- `打开浏览器会话` 步骤中的浏览器元素 `观察` 在会话创建后作为就绪检查，不能先定位再打开。
+  纯浏览器观察、验证和动作步骤均不要求桌面操作区域。
+- 页面文字条件写成 `浏览器出现文字【文字】` 或 `浏览器未出现文字【文字】`；元素条件仅接受 CSS
+  selector。登录等人工步骤写 `失败：等待用户继续`，复用主界面“继续”按钮触发立即复检。
+  追加 `；10秒重试` 可同时启用定时自动复检；点击“继续”会提前唤醒，不必等到定时点。
 
 ## 统一数字类型
 
@@ -210,6 +221,26 @@ my-workflow/
 `cli capabilities` 明确列出时，才可额外调用 `select_text`、`copy` 等新增动作。调用方法必须与声明权限一致；
 所有改变页面的调用仍放入 `ctx.step.perform()` 或受监督的 `ctx.debug.step()`，并在 `finally` 或流程清理阶段
 关闭本流程打开的会话。不得直接导入 Playwright、浏览器驱动或网络库。
+
+权威签名和返回结构如下，不得猜测：
+
+```python
+ctx.browser.open(browser="chrome", area=None)       # {session_id, provider_id}
+ctx.browser.navigate(url)                           # {success, action, data}
+ctx.browser.locate(selector, text="", limit=1)     # list[{object_id, ...}]
+ctx.browser.find(selector, text="")                # 唯一 {object_id, ...}
+ctx.browser.find_article()                          # 唯一文章对象
+ctx.browser.read(target, fields=("text",))         # {source, object_id, data:{...}}
+ctx.browser.click(target); ctx.browser.fill(target, text)
+ctx.browser.select_text(target); ctx.browser.copy(target, field="text")
+ctx.browser.scroll(x=0, y=0); ctx.browser.press(key)
+ctx.browser.download(target, filename="")
+ctx.browser.verify(action, expectation)             # {passed, evidence, message}
+ctx.browser.close()                                 # None
+```
+
+Markdown 浏览器步骤和后续程序扩展共享同一 `ctx.browser` 实例与受管会话。已有会话时扩展直接读取，
+不得再次 `open()`；仅由扩展自己打开的会话才在 `finally` 关闭，可用 `ctx.browser.opened` 判断。
 
 创建包含 `browser-enhancement@1` 的流程前，先确认当前 `cli capabilities` 列出
 `workflow.browser-enhancement@1`，再确认 `cli access list` 中 `browser_enhancement.status.effective`
@@ -408,6 +439,7 @@ OCR 锚定。横向越界、锚点消失或仍然越界都会安全停止。不�
 ```python
 def run(ctx):
     rule = ctx.manifest["flow"]["task_rules"]["规则名称"]
+    previous = ctx.vars.get("前一步保存的变量")
     ctx.stop.check()
     # 只通过 ctx.ocr、ctx.screen、ctx.geometry、ctx.window、ctx.mouse、ctx.browser 等公共能力工作
     yield {"result": "可序列化结果"}
@@ -416,6 +448,9 @@ def run(ctx):
 必须遵守：
 
 - 入口函数是 `run(ctx)`，返回 `dict`、可迭代的 `dict` 或 `None`；
+- `ctx.vars` 是此前步骤 `保存为` 结果的只读实时映射；`ctx.values` 仅解析参数与类型；
+- 程序扩展使用 `ctx.debug.log("说明", level="info")` 写本次运行诊断，不自行打开文件；底座把未捕获
+  异常及 traceback 写入运行日志。日志不得包含 Cookie、密码或敏感页面正文；
 - 每轮循环调用 `ctx.stop.check()`，循环次数从 `workflow.md` 读取并有上限；
 - 鼠标键盘组合动作放在 `ctx.input.transaction()` 中；
 - 影响界面的动作使用 `ctx.step.perform()` 并以重新读屏作为成功条件；成功条件不得恒为 `True`；
