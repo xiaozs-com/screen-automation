@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.1.42
+version: 1.1.44
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_en: Enhances an agent's screen understanding and control with local 
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
 metadata:
   slug: screen-automation
-  version: 1.1.42
+  version: 1.1.44
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -73,7 +73,8 @@ Skill 与桌面端版本号相互独立。基础动作以 `cli status` 和 `cli 
 - **基础屏幕任务**：只有 `status`、`capabilities` 和任务所需动作均成功声明时才继续；未列出的命令或
   参数不调用，也不改用其他输入工具绕过小助手。
 - **流程创建或修改**：除动作探测外，还必须让当前桌面端返回 `cli workflow schema`，并用同一桌面端
-  执行 `workflow validate`。无法取得当前流程语言契约时，可以运行该版本已安装且健康检查通过的流程，
+  执行 `workflow validate`。程序扩展还应优先用 `cli workflow sdk`（等价入口：
+  `cli workflow schema sdk`）查询当前安装版本的 SDK 签名。无法取得当前流程语言契约时，可以运行该版本已安装且健康检查通过的流程，
   但停止创建、升级或修复流程，不能凭最新版标准生成后尝试安装。
 - **可选扩展**：`access list`、组件状态或 Agent Provider 探测无法执行时，将状态记为“无法确认”；不进入
   不存在的设置入口，不把未授权、未安装、平台不支持和版本过旧混成同一种故障。
@@ -114,6 +115,7 @@ cli task end
 
 ```text
 cli application launch --name "微信"
+cli file open --path "C:\Users\用户\Documents\报告.docx"
 cli window wait-selection --title "微信" --timeout 30
 cli window activate --target <target_id>
 cli window arrange --handles <handle1> <handle2> --layout columns
@@ -127,6 +129,10 @@ cli window arrange --handles <handle1> <handle2> --layout columns
 Chrome/Edge 窗口即使标题相同，也不能被当作已经打开的受管浏览器会话。
 流程主动打开并登记的新应用窗口默认继承启动窗口的位置和大小；受管浏览器窗口创建后也由底座
 强制应用该区域。只有流程显式排列窗口或指定其他布局时，才覆盖这个默认摆放。
+用户给出本地文档路径并要求打开时，若能力清单包含 `file.open`，直接使用
+`cli file open --path <路径>`；流程使用 `打开文件【参数【文档路径】】`，程序扩展使用
+`ctx.app.open_file(path)`。这三个入口都要求现有本地文件并使用系统默认关联应用，不使用 shell；
+流程声明“读取文件、控制应用”，日志和结果不得记录完整路径。不要再用 Ctrl+O 和模拟输入绕行。
 `打开浏览器会话` 步骤中的浏览器元素观察由底座延后到会话创建后作为就绪检查；不得在会话尚未
 创建时先调用 `browser locate`。纯浏览器观察/验证步骤同样不要求桌面操作区域。
 网页可见文字条件使用 `浏览器出现文字【文字】`，不要把普通文字写进 `浏览器出现元素【CSS selector】`。
@@ -153,8 +159,8 @@ browser close chrome|edge
 `open → navigate/read/locate → close`，不得在每轮决策前再次 `open`，也不得由 Agent 自行使用
 `browser open --new`。只有收到 `browser_session_expired` 时才允许重新 `open` 一次；收到
 `browser_session_not_open` 时先执行 `browser status` 并报告状态，禁止无限重试。任务完成、失败或用户
-停止时再执行一次 `browser close chrome|edge`；除非用户明确要求结束整个浏览器增强服务，否则不加
-`--stop-daemon`。
+停止时默认保留浏览器现场；只有用户要求关闭或流程明确声明关闭时才执行一次
+`browser close chrome|edge`。除非用户明确要求结束整个浏览器增强服务，否则不加 `--stop-daemon`。
 
 用户给出网址时直接执行一次 `browser open chrome|edge --url <网址>`，让小助手创建或复用受管会话并
 进入页面。若结果为 `status=waiting_for_user`、`reason=login_required` 且用户没有提供凭据，立即停止网页
