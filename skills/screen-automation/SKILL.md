@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.1.44
+version: 1.2.0
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕
 description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.
 metadata:
   slug: screen-automation
-  version: 1.1.44
+  version: 1.2.0
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -110,7 +110,25 @@ cli task hotkey <按键...>
 cli task end
 ```
 
-跨应用任务可在用户授权范围内直接启动应用，再确认新窗口；启动窗口只是第一个坐标锚点，不是
+当 `cli capabilities` 列出 `ui.semantic-action` 时，标准桌面控件优先使用无障碍原生动作：
+
+```text
+cli ui act invoke --role button --name <名称>
+cli ui act set-value --role text_field --name <名称> --value-stdin
+cli ui act toggle --role checkbox --name <名称>
+cli ui act select --role list_item --name <名称>
+```
+
+流程程序扩展使用对应的 `ctx.ui.invoke(...)`、`ctx.ui.set_value(...)`、`ctx.ui.toggle(...)`、
+`ctx.ui.select(...)`，不得从扩展中启动 CLI。
+
+只对当前已确认窗口中唯一、可见、启用且支持相应 UIA/AX 模式的控件使用。按钮和菜单用 `invoke`，
+输入框用 `set-value`，复选框/开关用 `toggle`，列表、单选项或标签用 `select`。敏感值不得放入命令行；
+密码控件不通过该普通接口写入。`verified: true` 只表示控件自身状态已按预期变化；`invoke` 返回
+`requires_post_verification: true` 时必须重新读取页面、UIA、OCR 或屏幕状态确认业务结果。目标不唯一、
+模式不支持或验证失败时，回到本次观察得到的坐标并使用鼠标键盘操作，禁止猜测或无限重试。
+
+跨应用任务可在用户授权范围内直接启动应用，再确认新窗口；锚定窗口只是第一个坐标锚点，不是
 全程限制：
 
 ```text
@@ -123,11 +141,11 @@ cli window arrange --handles <handle1> <handle2> --layout columns
 
 调用前必须确认 `cli capabilities` 列出 `application.launch` 和任务所需窗口动作。流程语言中优先
 使用 `应用`、`找不到时：启动应用`、`打开应用【名称】`、新窗口登记和命名操作区域；执行到哪个
-操作区域，底座就激活其绑定窗口。窗口允许重叠，也可排列，不得把启动窗口误解为全流程排他锁。
+操作区域，底座就激活其绑定窗口。窗口允许重叠，也可排列，不得把锚定窗口误解为全流程排他锁。
 `应用` 直接写为 Windows `.exe` 文件名且没有另写 `首选进程` 时，该文件名是严格进程条件；不得用
 标题相同的其他应用窗口代替。纯浏览器增强步骤可以省略 `在`，因为它操作受管会话对象；普通
 Chrome/Edge 窗口即使标题相同，也不能被当作已经打开的受管浏览器会话。
-流程主动打开并登记的新应用窗口默认继承启动窗口的位置和大小；受管浏览器窗口创建后也由底座
+流程主动打开并登记的新应用窗口默认继承锚定窗口的位置和大小；受管浏览器窗口创建后也由底座
 强制应用该区域。只有流程显式排列窗口或指定其他布局时，才覆盖这个默认摆放。
 用户给出本地文档路径并要求打开时，若能力清单包含 `file.open`，直接使用
 `cli file open --path <路径>`；流程使用 `打开文件【参数【文档路径】】`，程序扩展使用
@@ -149,7 +167,9 @@ browser status
 browser open chrome|edge [--url <http/https URL>]
 browser navigate --browser chrome|edge <http/https URL>
 browser auth-status --browser chrome|edge
-browser locate --browser chrome|edge [--selector <CSS>] [--match-text <文字>] [--limit <数量>]
+browser probe --browser chrome|edge --task-kind READ|LOCATE|ACT|FILL|SELECT|DOWNLOAD|VERIFY
+browser outcome --browser chrome|edge --decision USE_DOM|ENHANCE_DOM|EXIT_DOM --task-kind <类型> --result success|failure [--verified] [--failure-type <类型>]
+browser locate --browser chrome|edge [--selector <CSS>] [--match-text <文字>] [--limit <数量>] [--strategy-id <Probe 返回值>]
 browser read|click|fill|select-text|copy|scroll|press|verify|download --browser chrome|edge ...
 browser close chrome|edge
 ```
@@ -170,6 +190,29 @@ browser close chrome|edge
 `browser auth-status --browser chrome|edge`，仅在返回 `status=ready` 后继续使用原会话。受管浏览器的
 持久化 Profile 会跨正常关闭和小助手重启保留网站登录状态；网站仍可主动使登录过期。只禁止 Agent 将
 Cookie、密码等原始凭据写入模型上下文、流程文件、运行日志或结果输出。
+
+`browser probe` 是浏览器增强组件内部的 **DOM 网页操作能力探测器**，只用于减少 Agent 在无效 DOM
+路线上的试错。只有浏览器增强的动作契约与访问状态均有效、受管会话已打开且登录检查为 `ready` 时
+才调用；没有安装、授权或启用浏览器增强时不得调用，也不得影响 OCR、UIA、鼠标键盘或普通屏幕自动化。
+基础屏幕路径不需要、也不等待 DOM 能力探测。
+
+需要 DOM 定位、结构化读取或页面操作时，在当前页面按任务类型调用一次 `browser probe --task-kind ...`。
+域名 Profile 只分别记录 DOM 的读取、定位、操作和验证倾向，且只是弱先验；当前页面结果始终优先：
+`USE_DOM` 使用普通 DOM；`ENHANCE_DOM` 只启用 Probe 明示的 iframe、Shadow DOM 等增强；`EXIT_DOM`
+只表示停止 DOM 路线。收到 `EXIT_DOM` 后由 engine / Agent 根据任务、现场证据和可用能力，在 UIA、OCR、
+CV、VLM 中选择理解方式，在 UIA Action 或 Mouse + Keyboard 中选择操作方式，再重新观察并验证。
+Probe 不替 engine / Agent 选择非 DOM 路线，也不是新的执行者。
+普通 `browser locate`、`ctx.browser.locate(...)` 和底层 `object.locate` 永远是直接定位，不受 Probe 的次数或
+时间预算限制。只有 Agent 决定采用 Probe 策略，并显式传入 Probe 返回的 `strategy_id` 时，才使用
+`browser locate --strategy-id ...` 或 `ctx.browser.locate_with_strategy(..., strategy_id=...)` 获取结构化策略状态。
+
+Probe 会为 Agent 建立一个可选的 DOM 策略会话；只有显式携带 `strategy_id` 的策略定位计入同一目标最多
+三次、总计约十秒的预算，所有普通定位原语都不承担全局重试策略。元素暂未加载可以有界 Retry；持续找不到、Canvas、DOM
+不稳定、元素不可可靠操作、动作无响应或验证失败必须按结构化结果执行 `EXIT_DOM`，禁止换写法无限重试。
+每个页面动作仍须重新观察并验证；只有验证通过才用 `browser outcome ... --result success --verified`
+更新 Profile。动作返回成功但页面未达到目标状态时，记录 `--result failure --failure-type VERIFY_FAILED`。
+Profile 只能保存域名级能力倾向，不保存 URL 路径、selector、XPath、坐标或具体操作步骤；连续失败应
+降低置信度并允许旧 Profile 失效。切到屏幕路径后继续遵守观察—操作—验证规则。
 
 `locate` 可用 `--limit` 限制候选数量；后续读取或操作在未提供已定位对象时必须匹配唯一目标，相关命令
 明确支持 `--index` 时才可从多个候选中选择。`verify` 接受动作与期望 JSON。
