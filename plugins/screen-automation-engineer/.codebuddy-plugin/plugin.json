@@ -1,13 +1,17 @@
 {
   "name": "screen-automation-engineer",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "Provides strong screen understanding and control with local screen-vision technology, and creates and maintains automation workflows through natural language.",
   "author": {
     "name": "xiaozs-com",
     "email": "qclaw@xiaozs.com"
   },
-  "agents": ["./agents/screen-automation-engineer.md"],
-  "skills": ["./skills/screen-automation"],
+  "agents": [
+    "./agents/screen-automation-engineer.md"
+  ],
+  "skills": [
+    "./skills/screen-automation"
+  ],
   "expertType": "agent",
   "agentName": "screen-automation-engineer",
   "displayName": {
@@ -31,11 +35,25 @@
   "plugin": "screen-automation-engineer",
   "homepage": "https://www.xiaozs.com/sah/",
   "license": "MIT-0",
-  "keywords": ["screen-automation", "workflow", "windows", "macos"],
+  "keywords": [
+    "screen-automation",
+    "workflow",
+    "windows",
+    "macos"
+  ],
   "tags": [
-    {"en": "Screen Automation", "zh": "屏幕自动化"},
-    {"en": "Workflow", "zh": "自动化流程"},
-    {"en": "Desktop", "zh": "本地屏幕"}
+    {
+      "en": "Screen Automation",
+      "zh": "屏幕自动化"
+    },
+    {
+      "en": "Workflow",
+      "zh": "自动化流程"
+    },
+    {
+      "en": "Desktop",
+      "zh": "本地屏幕"
+    }
   ],
   "quickPrompts": [
     {

@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.2.0
+version: 1.2.2
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕
 description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.
 metadata:
   slug: screen-automation
-  version: 1.2.0
+  version: 1.2.2
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -18,6 +18,15 @@ metadata:
 
 使用“屏幕自动化小助手”完成当前屏幕任务，并为流程工程提供唯一的 CLI、能力、安全和流程标准。
 需要把任务沉淀为可复用流程、维护已有流程，或处理 `执行者：agent` checkpoint 时，应由“屏幕自动化工程师”角色负责执行；具体能力与约束仍以本 Skill 为准。
+
+## 流程可组合的能力
+
+不要沿用“小助手不能联网、不能生成文件、不能调用其他 Agent 或工具”的早期概括。当前流程可组合屏幕操作、浏览器、Agent 步骤、结果保存和外部程序；具体接口以安装版本的 SDK 清单为准。
+
+- Agent 接入步骤可以返回多种页面分类、多个字段或对象，不限于预期页面的“是/否”；由后续流程判断和验证。
+- 文件生成已有结果保存、截图保存、浏览器下载；小助手 1.2.9 起提供 `ctx.files` 文本和 JSON 读写。
+- 外部程序已有 `ctx.app.launch_application`；小助手 1.2.9 起 `ctx.tools.run` 等待工具退出并返回输出。联网 API、文档生成和有命令行入口的其他 Agent 都可通过任务指定的工具调用。
+- 扩展不能直接导入某些底层库，是公共 SDK 路径约束，不能表述为禁止完成这些任务。旧版本没有新接口时明确版本差异，选择已有能力或升级，不虚构接口。详见 `references/workflow-standard.md`。
 
 ## 系统全景
 
@@ -224,8 +233,11 @@ Profile 只能保存域名级能力倾向，不保存 URL 路径、selector、XP
 
 ## 可选能力
 
-浏览器增强、Agent 接入和 VLM 屏幕理解均可能需要单独组件或能力码。能力缺失、未授权或需要激活时停止，
-由用户联系开发者购买并自行激活；不得猜测、索取、记录、代输或绕过能力码。浏览器增强不是独立执行者；
+可选扩展以小助手当前组件目录和 `cli access list` 返回状态为准，目录可增加新组件，不以 Skill 内的固定名单为全集。使用前同时核对：安装版本公开了所需接口；需要的组件已安装且平台支持；授权已激活；功能已启用；访问状态 `effective: true`。Agent 接入还需核对已配置 Provider 的状态。仅在这些条件满足时，才推荐并使用该扩展完成当前任务。
+
+组件未安装、未激活、未启用或状态无法确认时，不把它作为当前可用能力，不推荐直接调用，也不生成依赖它就能运行的流程。只可简短提醒：小助手有这项可选扩展，如需使用，请按软件界面提示获取授权码、激活并安装组件。不要固定要求用户联系开发者或购买；入口、流程与获取方式以软件界面为准。用户主动要求安装或配置时，再按界面支持的路径协助。用户完成后重新检查状态。
+
+不得猜测、索取、记录、代输或绕过授权码。已有正常能力可完成任务时继续使用；不能完成时说明缺少的能力，不误报为软件故障。后台操作组件不可用时不擅自切换前台操作模式。浏览器增强不是独立执行者；
 用户当前普通浏览器可由屏幕/UIA可靠完成时直接继续，需要 DOM 时复用小助手的持久化受管 Profile。
 
 浏览器增强启动的是正常浏览器窗口，必须保留地址栏，供用户确认当前网址、登录状态和页面范围；只有“帮助中心”信息窗口可以使用无地址栏的应用窗口。若浏览器增强窗口没有地址栏，停止操作并报告启动配置异常。
