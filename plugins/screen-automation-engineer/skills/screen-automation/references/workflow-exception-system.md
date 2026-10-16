@@ -130,3 +130,11 @@ Python SDK 的 `cleanup(ctx, reason)` 使用同一停止隔离机制。
 对应测试入口包括 `tests/test_flow_exception_policy.py`、`tests/test_workflow_lifecycle.py`、
 `tests/test_stop_collection.py`、`tests/test_run_instances.py` 和 `tests/test_recovery_details.py`。
 测试通过、源码启动、安装包交付、真实 Agent 联调和真机验收分别记录，不互相替代。
+
+
+## 可选的未匹配异常重启
+
+流程可配置“未匹配处理方法：从头执行”“异常重启上限：3次”“达到上限：终止流程”，
+并声明 `exception-restart@1`。默认关闭；已配置恢复方法优先，未知分类才重启。
+重启计数累计，最终结束处理只执行一次；停止、只读诊断、截图或 Agent 失败不盲目重启。
+配置、状态边界和去重要求见 [未匹配异常的可选从头执行](exception-restart.md)。
