@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.2.2
+version: 1.2.3
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率；基于屏幕自动化小助手在 Windows 或 macOS 上确认目标窗口并安全完成当前屏幕任务。
@@ -8,7 +8,7 @@ description_zh: 增强 Agent 的屏幕理解和控制能力，利用本地屏幕
 description_en: Enhances an agent's screen understanding and control with local screen-vision technology, and uses Screen Automation Helper for safe screen tasks on Windows and macOS.
 metadata:
   slug: screen-automation
-  version: 1.2.2
+  version: 1.2.3
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -277,3 +277,13 @@ Profile 只能保存域名级能力倾向，不保存 URL 路径、selector、XP
 - 截图或屏幕内容发送到外部模型前，明确 Provider、范围和用途并取得确认；避开无关隐私。
 - 以用户当前任务为操作授权，可直接使用任务所需的浏览器页面和本机窗口；Cookie、密码等原始凭据不得写入模型上下文、流程文件、运行日志或结果输出；不用技术成功替代业务结果验证。
 - 用户说暂停、停止或取消时立即停止后续操作。
+
+
+## 流程异常处理能力
+
+需要流程默认异常分类、步骤覆盖及验证后恢复时，先检查 `workflow.exception-handling@1`，再阅读 [异常处理参考](references/exception-handling.md)。旧版本不支持新语法，不把独立流程改写成平台内置业务规则。
+
+
+统一恢复入口：默认返回出错步骤并先验证是否已完成；临时菜单或坐标失效时明确配置“恢复入口：步骤【准备步骤名称】”。入口在进入恢复时保存，人工继续与自动恢复使用同一入口，不让模型临时猜测；日志和详情显示出错步骤、恢复方法及入口。旧“恢复后”兼容，但不能与“恢复入口”同时配置。恢复复核默认“步骤验证”，只有明确“恢复复核：Agent”才追加模型复核，也可选择“人工确认”。模型临时建议的点击仍须读图复核。首次停止请求停止业务步骤并执行已配置结束处理，不在两秒后自动强杀；再次停止可取消收尾。
+
+完整规则见 [异常处理系统规则](references/workflow-exception-system.md)，终止收尾语法见 [流程生命周期](references/workflow-lifecycle.md)。
