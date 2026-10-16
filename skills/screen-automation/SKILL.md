@@ -281,9 +281,12 @@ Profile 只能保存域名级能力倾向，不保存 URL 路径、selector、XP
 
 ## 流程异常处理能力
 
-需要流程默认异常分类、步骤覆盖及验证后恢复时，先检查 `workflow.exception-handling@1`，再阅读 [异常处理参考](references/exception-handling.md)。旧版本不支持新语法，不把独立流程改写成平台内置业务规则。
+创建、修改或诊断异常恢复、人工继续及终止收尾时，先完整读取
+[异常处理系统规则](references/workflow-exception-system.md)，再按所需能力读取具体语法：
 
+- 流程级异常规则、恢复入口和复核：确认 `cli capabilities` 声明 `workflow.exception-handling@1`，读取 [异常处理参考](references/exception-handling.md)。
+- 已知例外和结束处理：确认声明 `workflow.lifecycle@1`，并在基本信息声明 `引擎能力：workflow-lifecycle@1`，读取 [流程生命周期](references/workflow-lifecycle.md)。
 
-统一恢复入口：默认返回出错步骤并先验证是否已完成；临时菜单或坐标失效时明确配置“恢复入口：步骤【准备步骤名称】”。入口在进入恢复时保存，人工继续与自动恢复使用同一入口，不让模型临时猜测；日志和详情显示出错步骤、恢复方法及入口。旧“恢复后”兼容，但不能与“恢复入口”同时配置。恢复复核默认“步骤验证”，只有明确“恢复复核：Agent”才追加模型复核，也可选择“人工确认”。模型临时建议的点击仍须读图复核。首次停止请求停止业务步骤并执行已配置结束处理，不在两秒后自动强杀；再次停止可取消收尾。
-
-完整规则见 [异常处理系统规则](references/workflow-exception-system.md)，终止收尾语法见 [流程生命周期](references/workflow-lifecycle.md)。
+以安装版 `workflow schema` 和 `workflow validate` 为准；能力未声明时停止使用对应新语法。
+正常业务结果使用分支表达；恢复不能扩大授权或盲目重放有副作用的操作。具体字段、恢复顺序、
+等待及停止语义分别由上述参考定义，不以专家正文或旧对话代替。
