@@ -212,7 +212,7 @@ metadata:
     openai = '''interface:
   display_name: "屏幕自动化工程师"
   short_description: "强大的屏幕理解与控制，并创建可维护流程"
-  default_prompt: "使用 $screen-automation-engineer，看看左边窗口的内容是什么，进行一项屏幕任务。"
+  default_prompt: "使用 $screen-automation-engineer，左边窗口的内容是什么？进行一项屏幕任务"
 '''
     (GENERATED_HYBRID / "agents" / "openai.yaml").write_text(openai, encoding="utf-8", newline="\n")
 
@@ -269,7 +269,17 @@ def validate_skill(directory: Path, expected_name: str) -> str:
     if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", data["version"]):
         fail(f"invalid SemVer: {data['version']}")
     validate_links(directory)
+    validate_powershell_encoding(directory)
     return data["version"]
+
+
+def validate_powershell_encoding(directory: Path) -> None:
+    """Windows PowerShell 5.1 needs a BOM to read non-ASCII UTF-8 scripts."""
+    for path in directory.rglob("*.ps1"):
+        content = path.read_bytes()
+        content.decode("utf-8-sig")
+        if not content.isascii() and not content.startswith(b"\xef\xbb\xbf"):
+            fail(f"PowerShell script with non-ASCII text requires UTF-8 BOM: {path.name}")
 
 
 def png_dimensions(path: Path) -> tuple[int, int]:

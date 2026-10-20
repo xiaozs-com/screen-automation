@@ -1,5 +1,8 @@
 # 流程级与步骤级异常处理
 
+> 本文下列全局异常、默认 VLM 和旧步骤恢复规则仅用于语言 2。语言 3 的智能失败处理见
+> [Agent 阶段](workflow-agent-phases.md)，不继承这些隐式兜底；迁移见 [兼容规则](workflow-language-v2.md)。
+
 完整系统规则及判断顺序见[流程异常处理系统规则](workflow-exception-system.md)。
 例外异常与终止收尾语法见[例外异常与结束处理](workflow-lifecycle.md)。
 

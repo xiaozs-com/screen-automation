@@ -1,6 +1,6 @@
 {
   "name": "screen-automation-engineer",
-  "version": "1.2.3",
+  "version": "1.2.6",
   "description": "Provides strong screen understanding and control with local screen-vision technology, and creates and maintains automation workflows through natural language.",
   "author": {
     "name": "xiaozs-com",
@@ -29,7 +29,7 @@
   "avatar": "avatars/expert.png",
   "categoryId": "02-Engineering",
   "defaultInitPrompt": {
-    "zh": "看看左边窗口的内容是什么，进行一项屏幕任务",
+    "zh": "左边窗口的内容是什么？进行一项屏幕任务",
     "en": "See what is in the window on the left and complete a screen task"
   },
   "plugin": "screen-automation-engineer",
@@ -57,7 +57,7 @@
   ],
   "quickPrompts": [
     {
-      "zh": "看看左边窗口的内容是什么，进行一项屏幕任务",
+      "zh": "左边窗口的内容是什么？进行一项屏幕任务",
       "en": "See what is in the window on the left and complete a screen task"
     },
     {

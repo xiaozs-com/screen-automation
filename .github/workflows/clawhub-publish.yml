@@ -59,6 +59,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Assemble and validate ClawHub asset
+        run: python tools/assemble_assets.py --sync --check
+
       - name: Preview ClawHub release
         run: npx --yes clawhub@0.23.3 skill publish dist/screen-automation-engineer --owner xiaozs-com --slug screen-automation-engineer --version "${{ needs.resolve-version.outputs.version }}" --dry-run
 

@@ -1,4 +1,4 @@
-param([string]$Executable)
+﻿param([string]$Executable)
 
 $ErrorActionPreference = "Stop"
 $candidates = [System.Collections.Generic.List[string]]::new()

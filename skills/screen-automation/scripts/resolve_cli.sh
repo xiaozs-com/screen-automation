@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  printf '%s\n' '{"ok":false,"error":"resolve_cli.sh is for macOS only. On Windows, use scripts/resolve_cli.ps1 in PowerShell."}' >&2
+  exit 2
+fi
+
 for app in \
   "${SCREEN_AUTOMATION_MAC_APP:-}" \
   "/Applications/Screen Automation Helper.app" \
