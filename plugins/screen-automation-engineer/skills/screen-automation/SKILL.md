@@ -1,6 +1,6 @@
 ---
 name: screen-automation
-version: 1.2.6
+version: 1.2.7
 display_name: 屏幕自动化
 display_name_en: Screen Automation
 description_zh: 增强 Agent 的屏幕理解与控制能力，利用本地屏幕视觉技术提升界面识别和定位效率，并通过自然语言创建和维护自动化流程。配合支持 Windows 与 macOS 的屏幕自动化小助手桌面端，完成当前屏幕任务及流程的安装、运行和结果读取。
@@ -8,7 +8,7 @@ description_en: Enhances an agent's screen understanding and control through loc
 description: 增强 Agent 的屏幕理解与控制能力，利用本地屏幕视觉技术提升界面识别和定位效率，并通过自然语言创建和维护自动化流程。配合支持 Windows 与 macOS 的屏幕自动化小助手桌面端，完成当前屏幕任务及流程的安装、运行和结果读取。
 metadata:
   slug: screen-automation
-  version: 1.2.6
+  version: 1.2.7
   displayName: 屏幕自动化
   summary: 增强 Agent 屏幕理解与控制的本地屏幕自动化能力
   homepage: https://www.xiaozs.com/sah/
@@ -96,6 +96,18 @@ APP_CLI="$(bash "<Skill目录>/scripts/resolve_cli.sh")"
 
 ## 创建和运行自动化流程
 
+连续菜单操作、键盘输入及剪贴板结果使用，优先定义独立“连续交互流程段”。
+先查询 `cli workflow schema interactions`；需要主程序支持 `continuous-interaction@1`。
+章节内用三级标题定义名称、四级标题写子步骤；主流程写 `执行：连续交互流程段【名称】`。
+段上可写 `返回：变量【名称】`、`超时：DURATION(60s)`，调用步骤用“保存为”接收结果。
+不要写开始/结束范围引用。段内步骤可见，复用既有动作语法；局部跳转不得跨段，不允许嵌套。
+子步骤先按失败字段有界自动重试或最多检查；用尽后释放锁，再由调用步骤处理。调用步骤重试整段时从段头执行，Agent/人工放在调用步骤的失败处理。
+锁内验证并读取剪贴板，返回变量必须由本次调用实际产生。锁等待不消耗步骤执行时限，但仍受交互锁等待上限与用户停止约束。旧版主程序不可生成此语法。
+
+生成新异常恢复语法前，查询 `cli workflow schema steps` 的 `failure_contract`，确认支持现场处理与后续方向；不能仅凭 `agent-phases@1` 推断旧版支持新增字段。
+非关键步骤优先有界自动重试、Agent 恢复和明确跳过；关键步骤显式选择人工或停止。详情见
+[Agent 阶段](references/workflow-agent-phases.md)，不要把“Agent 说可以继续”当作可执行路线。
+
 先完整读取 [流程开发标准](references/workflow-standard.md)，查询 `cli workflow schema steps`、
 `cli workflow sdk`。本地目录或 ZIP 用 `cli workflow inspect <路径>` 校验；
 安装后用 `cli workflow validate <流程标识>` 校验已安装副本。
@@ -111,7 +123,7 @@ APP_CLI="$(bash "<Skill目录>/scripts/resolve_cli.sh")"
   [Agent 阶段](references/workflow-agent-phases.md) 与
   [Agent 接入](references/agent-bridge.md)。先确认 Provider 就绪；文字输入使用文本能力，
   区域截图输入使用视觉能力。
-- 失败处理写在本步，选择有界重试、仅验证、恢复步骤、跳转或等待人工。重试重新观察并执行；
+- 失败处理写在本步，可分别定义 Agent“现场处理”和“后续方向”，并按步骤重要性选择兜底和次数耗尽路线。Agent 现场处理支持有界点击；默认兜底跳过本步骤，只有显式声明才等待人工。也可选择有界重试、仅验证、恢复步骤或跳转。重试重新观察并执行；
   “最多检查”只验证，不重复动作。恢复后验证业务结果，尤其避免重复发送或提交。
 - 保存摘要、结果检查与停止收尾见 [流程生命周期](references/workflow-lifecycle.md)。
 - 含 Python 的流程先确认 [代码信任边界](references/workflow-trust.md)；权限声明和 AST 检查不是系统沙箱。
